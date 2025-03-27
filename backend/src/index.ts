@@ -47,7 +47,7 @@ async function sendLineNotification(light: number, temp: number, humidity: numbe
     }
 
     const message = `⚠ แจ้งเตือน! ⚠
-📅 วันที่: ${new Date().toLocaleString()}
+📅 วันที่: ${new Date().toLocaleString()} น.
 ☀ แสงแดด: ${light} lux (${lightStatus})
 🌡 อุณหภูมิ: ${temp}°C (${tempStatus})
 💧 ความชื้น: ${humidity}% (${humidityStatus})`;
@@ -78,4 +78,6 @@ app.post("/sensor-data", async (req: Request, res: Response) => {
 });
 
 // ✅ Start Server
-app.listen(PORT, () => console.log(`🚀 Server started on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server runnig on port http://localhost:${PORT}`);
+  });
