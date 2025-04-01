@@ -65,17 +65,47 @@ async function sendLineNotification(light: number, temp: number, humidity: numbe
     }
 }
 
-// ✅ Route รับค่าจาก ESP32
-app.post("/sensor-data", async (req: Request, res: Response) => {
+let lastSensorData = {
+    light: 0,
+    temp: 0,
+    humidity: 0
+  };
+  
+  let lastAlertTime = 0;
+  const ALERT_INTERVAL = 60 * 1000; // แจ้งเตือนห่างกันอย่างน้อย 1 ชั่วโมง
+  
+  // ✅ Route รับค่าจาก ESP32
+  app.post("/sensor-data", async (req: Request, res: Response) => {
     const { light, temp, humidity }: { light: number; temp: number; humidity: number } = req.body;
-
+  
     if (light !== undefined && temp !== undefined && humidity !== undefined) {
+      lastSensorData = { light, temp, humidity };
+  
+      const now = Date.now();
+  
+      // 🔍 กำหนดเงื่อนไขการแจ้งเตือน
+      const isTempHigh = temp > 35;
+      const isHumidityHigh = humidity > 80;
+      const isLightLow = light < 100;
+  
+      const shouldAlert = isTempHigh || isHumidityHigh || isLightLow;
+  
+      if (shouldAlert && now - lastAlertTime > ALERT_INTERVAL) {
         await sendLineNotification(light, temp, humidity);
-        res.json({ message: "✅ ข้อมูลถูกส่งไปยังไลน์แล้ว!" });
+        lastAlertTime = now;
+      }
+  
+      res.json({ message: "✅ รับข้อมูลแล้ว!" });
     } else {
-        res.status(400).json({ message: "❌ ข้อมูลไม่ครบถ้วน" });
+      res.status(400).json({ message: "❌ ข้อมูลไม่ครบถ้วน" });
     }
-});
+  });
+  
+
+//✅ เพิ่ม route สำหรับหน้าเว็บ
+app.get("/latest", (req: Request, res: Response) => {
+    res.json(lastSensorData);
+  });
 
 // ✅ Start Server
 app.listen(PORT, () => {
