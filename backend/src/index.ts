@@ -7,7 +7,7 @@ import cors from "cors";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors());  
 app.use(bodyParser.json());
 
 const LINE_ACCESS_TOKEN: string = process.env.LINE_ACCESS_TOKEN || "";
