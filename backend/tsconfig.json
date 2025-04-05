@@ -9,6 +9,7 @@
     "outDir": "./dist",
     "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts"],
+  "extends": [],
+  "include": ["src/**/*.ts", "tests/**/*.ts"],
   "exclude": ["node_modules"]
 }
