@@ -101,40 +101,40 @@ async function sendLineNotification(light: number, temp: number, humidity: numbe
 💧 ความชื้น: ${humidity} % (${humidityStatus})
 🌧️ สภาพอากาศ: ${rainForecastStatus}`;
 
-    try {
-        const response = await axios.post(
-            "https://api.line.me/v2/bot/message/push",
-            {
-                to: LINE_GROUP_ID,
-                messages: [{ type: "text", text: message }],
-            },
-            {
-                headers: { Authorization: `Bearer ${LINE_ACCESS_TOKEN}` },
-            }
-        );
-        console.log("✅ ส่งข้อความแจ้งเตือนสำเร็จ!", response.data);
-    } catch (error: unknown) {
-        const axiosError = error as AxiosError;
-        console.error("❌ แจ้งเตือนล้มเหลว:", axiosError.response?.data || axiosError.message);
-    }
+    // try {
+    //     const response = await axios.post(
+    //         "https://api.line.me/v2/bot/message/push",
+    //         {
+    //             to: LINE_GROUP_ID,
+    //             messages: [{ type: "text", text: message }],
+    //         },
+    //         {
+    //             headers: { Authorization: `Bearer ${LINE_ACCESS_TOKEN}` },
+    //         }
+    //     );
+    //     console.log("✅ ส่งข้อความแจ้งเตือนสำเร็จ!", response.data);
+    // } catch (error: unknown) {
+    //     const axiosError = error as AxiosError;
+    //     console.error("❌ แจ้งเตือนล้มเหลว:", axiosError.response?.data || axiosError.message);
+    // }
 }
 
-let lastAlertTime = 0;
-const ALERT_INTERVAL = 5 * 60 * 1000; // 5 นาที
+// let lastAlertTime = 0;
+// const ALERT_INTERVAL = 5 * 60 * 1000; // 5 นาที
 
-// ✅ ตรวจสอบและส่งแจ้งเตือนทุก 5 นาที
-async function checkAndSendAlert() {
-    const currentTime = new Date().getTime();
-    if (currentTime - lastAlertTime >= ALERT_INTERVAL) {
-        if (lastSensorData) {
-            const { light, temp, humidity } = lastSensorData;
-            await sendLineNotification(light, temp, humidity);
-            lastAlertTime = currentTime;
-        }
-    }
-}
+// // ✅ ตรวจสอบและส่งแจ้งเตือนทุก 5 นาที
+// async function checkAndSendAlert() {
+//     const currentTime = new Date().getTime();
+//     if (currentTime - lastAlertTime >= ALERT_INTERVAL) {
+//         if (lastSensorData) {
+//             const { light, temp, humidity } = lastSensorData;
+//             await sendLineNotification(light, temp, humidity);
+//             lastAlertTime = currentTime;
+//         }
+//     }
+// }
 
-setInterval(checkAndSendAlert, ALERT_INTERVAL);
+// setInterval(checkAndSendAlert, ALERT_INTERVAL);
 
 // ✅ รับข้อมูลจาก ESP32
 app.post("/sensor-data", async (req: Request, res: Response) => {
