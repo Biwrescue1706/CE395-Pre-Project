@@ -1,31 +1,60 @@
 body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #f0f4f8;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #4caf50;
+    padding: 20px;
     color: #333;
     text-align: center;
-    padding: 30px;
-}
+  }
   
-.container {
-    background: white;
+  .container {
+    background: rgb(255, 255, 255);
     border-radius: 16px;
     box-shadow: 0 0 12px rgba(0,0,0,0.1);
-    max-width: 400px;
+    max-width: 600px;
     margin: auto;
     padding: 20px;
-}
+  }
   
-h1 {
+  h1 {
     margin-bottom: 20px;
-}
+  }
   
-.status p {
-    font-size: 20px;
-    margin: 10px 0;
-}
+  .status p,
+  p {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
   
-.update-time {
+  span {
+    font-weight: bold;
+  }
+  
+  .update-time {
     margin-top: 15px;
     font-size: 14px;
-    color: #777;
-}
+    color: #080404;
+  }
+  
+  .status {
+    padding: 4px 8px;
+    border-radius: 5px;
+    color: black;
+  }
+  
+  /* 🌞 Light */
+  .light-bright { background-color: #f9a825; } /* แสงจ้ามาก */
+  .light-medium { background-color: #ffeb3b; color: #000; } /* แสงกลาง */
+  .light-low { background-color: #607d8b; } /* มืด */
+  
+  /* 🌡️ Temp */
+  .temp-hot { background-color: #e53935; }
+  .temp-warm { background-color: #fb8c00; }
+  .temp-cool { background-color: #29b6f6; }
+  
+  /* 💧 Humidity */
+  .humidity-high { background-color: #039be5; }
+  .humidity-low { background-color: #8d6e63; }
+  
+  /* 🌧️ Rain forecast */
+  .rain-yes { background-color: #4caf50; }
+  .rain-no { background-color: #90a4ae; }
