@@ -53,7 +53,7 @@ async function fetchSensorData() {
     // พยากรณ์ฝน
     let rainForecastStatus;
     if (humidity >= 80 && temp >= 24 && temp <= 32) {
-      rainForecastStatus = "🌧️ มีโอกาสฝนตก";
+      rainForecastStatus = "🌦️🌩️ มีโอกาสฝนตก";
     } else {
       rainForecastStatus = "☀️ ไม่มีแนวโน้มฝนตก";
     }
