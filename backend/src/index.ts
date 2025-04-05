@@ -13,64 +13,93 @@ app.use(bodyParser.json());
 const LINE_ACCESS_TOKEN: string = process.env.LINE_ACCESS_TOKEN || "";
 const LINE_GROUP_ID: string = process.env.LINE_GROUP_ID || "";
 
-// ฟังก์ชันส่ง Line แจ้งเตือน
+// เก็บข้อมูลเซ็นเซอร์ล่าสุด
+let lastSensorData: { light: number; temp: number; humidity: number } | null = null;
+
+// ✅ ฟังก์ชันแปลงวัน/เวลาเป็นภาษาไทย
+function getThaiDateParts(date: Date) {
+    const optionsDate: Intl.DateTimeFormatOptions = {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    };
+
+    const optionsTime: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+    };
+
+    const thDateFormatter = new Intl.DateTimeFormat("th-TH", optionsDate);
+    const thTimeFormatter = new Intl.DateTimeFormat("th-TH", optionsTime);
+
+    const parts = thDateFormatter.formatToParts(date);
+    const time = thTimeFormatter.format(date);
+
+    const dayOfWeek = parts.find(p => p.type === "weekday")?.value ?? "";
+    const day = parts.find(p => p.type === "day")?.value ?? "";
+    const month = parts.find(p => p.type === "month")?.value ?? "";
+    const year = parts.find(p => p.type === "year")?.value ?? "";
+
+    return {
+        dayOfWeek,
+        day,
+        month,
+        year,
+        time
+    };
+}
+
+// ✅ ฟังก์ชันส่งข้อความ LINE
 async function sendLineNotification(light: number, temp: number, humidity: number): Promise<void> {
     let lightStatus = "";
     let tempStatus = "";
     let humidityStatus = "";
 
-    // ✅ ตรวจสอบค่าแสง
-    if (light > 65535) {
-        lightStatus = "แสงจ้ามากๆ 🌞";
-    } else if (light > 20000) {
-        lightStatus = "แสงจ้า 🌞";
-    } else if (light > 5000) {
-        lightStatus = "แสงสว่างมาก ☀️";
-    } else if (light > 1000) {
-        lightStatus = "แสงปานกลาง 🌤";
-    } else if (light > 50) {
-        lightStatus = "แสงน้อย ⛅";
-    } else if (light > 20) {
-        lightStatus = "แสงมืด 🌑";
-    } else if (light > 10) {
-        lightStatus = "มืดมาก 🌑";
-    } else if (light > 5) {
-        lightStatus = "มืดมากๆ 🌑";
+    // แปลค่าความสว่าง
+    if (light > 65535) lightStatus = "แสงจ้ามากๆ 🌞";
+    else if (light > 20000) lightStatus = "แสงจ้า 🌞";
+    else if (light > 5000) lightStatus = "แสงสว่างมาก ☀️";
+    else if (light > 1000) lightStatus = "แสงปานกลาง 🌤";
+    else if (light > 50) lightStatus = "แสงน้อย ⛅";
+    else if (light > 20) lightStatus = "แสงมืด 🌑";
+    else if (light > 10) lightStatus = "มืดมาก 🌑";
+    else if (light > 5) lightStatus = "มืดมากๆ 🌑";
+    else lightStatus = "มืดสนิท";
+
+    // แปลค่าอุณหภูมิ
+    if (temp > 35) tempStatus = "อุณหภูมิสูงมาก ⚠️";
+    else if (temp >= 30) tempStatus = "อุณหภูมิร้อน 🔥";
+    else if (temp >= 25) tempStatus = "อุณหภูมิอุ่นๆ 🌞";
+    else if (temp >= 20) tempStatus = "อุณหภูมิพอดี 🌤";
+    else tempStatus = "อุณหูมิเย็น ❄️";
+
+    // แปลค่าความชื้น
+    if (humidity > 80) humidityStatus = "ความชื้นสูงมาก 💦";
+    else if (humidity > 60) humidityStatus = "ความชื้นสูง 🌧️";
+    else if (humidity > 30) humidityStatus = "ความชื้นปกติ 🌤️";
+    else if (humidity > 20) humidityStatus = "ความชื้นต่ำ 🌵";
+    else humidityStatus = "อากาศแห้งมาก 🏜️";
+
+    // ✅ ตรวจว่าฝนอาจจะตกหรือไม่
+    let rainForecastStatus: string;
+    if (humidity >= 80 && temp >= 24 && temp <= 32) {
+        rainForecastStatus = "🌧️ มีโอกาสฝนตก";
     } else {
-        lightStatus = "มืดสนิท";
+        rainForecastStatus = "☀️ ไม่มีแนวโน้มฝนตก";
     }
 
-    // 📌 ตรวจสอบค่าอุณหภูมิ (°C)
-    if (temp > 35) {
-        tempStatus = "อุณหภูมิสูงมาก ⚠️";
-    } else if (temp >= 30) {
-        tempStatus = "อุณหภูมิร้อน 🔥";
-    } else if (temp >= 25) {
-        tempStatus = "อุณหภูมิอุ่นๆ 🌞";
-    } else if (temp >= 20) {
-        tempStatus = "อุณหภูมิพอดี 🌤";
-    } else {
-        tempStatus = "อุณหูมิเย็น ❄️";
-    }
-
-    // 📌 ตรวจสอบค่าความชื้น (%RH)
-    if (humidity > 80) {
-        humidityStatus = "ความชื้นสูงมาก 💦";
-    } else if (humidity > 60) {
-        humidityStatus = "ความชื้นสูง 🌧️";
-    } else if (humidity > 30) {
-        humidityStatus = "ความชื้นปกติ 🌤️";
-    } else if (humidity > 20) {
-        humidityStatus = "ความชื้นต่ำ 🌵";
-    } else {
-        humidityStatus = "อากาศแห้งมาก 🏜️";
-    }
+    const now = new Date();
+    const thaiDate = getThaiDateParts(now);
+    const fullDateTime = `${thaiDate.dayOfWeek}ที่ ${thaiDate.day} ${thaiDate.month} พ.ศ. ${thaiDate.year} เวลา ${thaiDate.time} น.`;
 
     const message = `⚠ แจ้งเตือน! ⚠
-📅 วันที่: ${new Date().toLocaleString()} น.
+📅 วันที่: ${fullDateTime}
 ☀ แสงแดด: ${light} lux (${lightStatus})
-🌡 อุณหภูมิ: ${temp}°C (${tempStatus})
-💧 ความชื้น: ${humidity}% (${humidityStatus})`;
+🌡 อุณหภูมิ: ${temp} °C (${tempStatus})
+💧 ความชื้น: ${humidity} % (${humidityStatus})
+🌧️ สภาพอากาศ: ${rainForecastStatus}`;
 
     try {
         const response = await axios.post(
@@ -83,7 +112,6 @@ async function sendLineNotification(light: number, temp: number, humidity: numbe
                 headers: { Authorization: `Bearer ${LINE_ACCESS_TOKEN}` },
             }
         );
-
         console.log("✅ ส่งข้อความแจ้งเตือนสำเร็จ!", response.data);
     } catch (error: unknown) {
         const axiosError = error as AxiosError;
@@ -91,30 +119,24 @@ async function sendLineNotification(light: number, temp: number, humidity: numbe
     }
 }
 
-let lastSensorData = {
-    light: 350,
-    temp: 26,
-    humidity: 50,
-};
-
 let lastAlertTime = 0;
-const ALERT_INTERVAL = 5 * 60 * 1000; // 5 นาที = 300,000 มิลลิวินาที
+const ALERT_INTERVAL = 5 * 60 * 1000; // 5 นาที
 
-// ฟังก์ชันตรวจสอบและส่งแจ้งเตือนทุก 5 นาที
+// ✅ ตรวจสอบและส่งแจ้งเตือนทุก 5 นาที
 async function checkAndSendAlert() {
     const currentTime = new Date().getTime();
     if (currentTime - lastAlertTime >= ALERT_INTERVAL) {
-        // ตรวจสอบว่าเวลาผ่านไปแล้วเกิน 5 นาที
-        const { light, temp, humidity } = lastSensorData;
-        await sendLineNotification(light, temp, humidity); // ส่งการแจ้งเตือน
-        lastAlertTime = currentTime; // อัปเดตเวลาแจ้งเตือนล่าสุด
+        if (lastSensorData) {
+            const { light, temp, humidity } = lastSensorData;
+            await sendLineNotification(light, temp, humidity);
+            lastAlertTime = currentTime;
+        }
     }
 }
 
-// ใช้ setInterval ตรวจสอบและส่งแจ้งเตือนทุก ๆ 5 นาที
 setInterval(checkAndSendAlert, ALERT_INTERVAL);
 
-// ✅ Route รับค่าจาก ESP32
+// ✅ รับข้อมูลจาก ESP32
 app.post("/sensor-data", async (req: Request, res: Response) => {
     const { light, temp, humidity }: { light: number; temp: number; humidity: number } = req.body;
 
@@ -126,12 +148,16 @@ app.post("/sensor-data", async (req: Request, res: Response) => {
     }
 });
 
-// ✅ เพิ่ม route สำหรับหน้าเว็บ
+// ✅ ดึงข้อมูลล่าสุด
 app.get("/latest", (req: Request, res: Response) => {
-    res.json(lastSensorData);
+    if (lastSensorData) {
+        res.json(lastSensorData);
+    } else {
+        res.status(404).json({ message: "❌ ไม่มีข้อมูลเซ็นเซอร์" });
+    }
 });
 
-// ✅ Start Server
+// ✅ เริ่มรันเซิร์ฟเวอร์
 app.listen(PORT, () => {
-    console.log(`Server running on port http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
