@@ -7,7 +7,7 @@ import cors from "cors";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());  
+app.use(cors());
 app.use(bodyParser.json());
 
 const LINE_ACCESS_TOKEN: string = process.env.LINE_ACCESS_TOKEN || "";
@@ -57,86 +57,87 @@ async function sendLineNotification(light: number, temp: number, humidity: numbe
     let tempStatus = "";
     let humidityStatus = "";
 
+
     // แปลค่าความสว่าง
-    if (light > 65535) lightStatus = "แสงจ้ามากๆ 🌞";
-    else if (light > 20000) lightStatus = "แสงจ้า 🌞";
-    else if (light > 5000) lightStatus = "แสงสว่างมาก ☀️";
-    else if (light > 1000) lightStatus = "แสงปานกลาง 🌤";
-    else if (light > 50) lightStatus = "แสงน้อย ⛅";
-    else if (light > 20) lightStatus = "แสงมืด 🌑";
-    else if (light > 10) lightStatus = "มืดมาก 🌑";
-    else if (light > 5) lightStatus = "มืดมากๆ 🌑";
-    else lightStatus = "มืดสนิท";
+    if (light > 65535) lightStatus = "แสงแดดจ้ามากๆ 🌞";
+    else if (light > 60000) lightStatus = "แสงสว่างมาก ☀️";
+    else if (light > 40000) lightStatus = "แดดแรงกลางแจ้ง 🌤";
+    else if (light > 30000) lightStatus = "แดดอ่อนหรือมีเมฆ 🌥";
+    else if (light > 20000) lightStatus = "ฟ้าครึ้มใกล้ฝน 🌦";
+    else if (light > 15000) lightStatus = "แสงธรรมชาติเยอะในร่ม 🌈";
+    else if (light > 10000) lightStatus = "แสงจากหลอดไฟขนาดใหญ่ 💡";
+    else if (light > 7000) lightStatus = "แสงในห้องสว่างมาก 💡";
+    else if (light > 4000) lightStatus = "ไฟสว่างทั่วไป 💡";
+    else if (light > 2000) lightStatus = "ห้องมีแสงไฟอ่อนๆ 🌙";
+    else if (light > 1000) lightStatus = "เริ่มมืดลง 🌌";
+    else if (light > 500) lightStatus = "แสงสลัว 🌑";
+    else if (light > 100) lightStatus = "มืดมาก ต้องเพ่งมอง 🔦";
+    else if (light > 10) lightStatus = "มืดเกือบสนิท 🕳️";
+    else lightStatus = "มืดสนิท ⚫";
 
     // แปลค่าอุณหภูมิ
-    if (temp > 35) tempStatus = "อุณหภูมิสูงมาก ⚠️";
+    if (temp > 35) tempStatus = "อุณหภูมิร้อนมาก ⚠️";
     else if (temp >= 30) tempStatus = "อุณหภูมิร้อน 🔥";
     else if (temp >= 25) tempStatus = "อุณหภูมิอุ่นๆ 🌞";
     else if (temp >= 20) tempStatus = "อุณหภูมิพอดี 🌤";
     else tempStatus = "อุณหูมิเย็น ❄️";
 
     // แปลค่าความชื้น
-    if (humidity > 80) humidityStatus = "ความชื้นสูงมาก 💦";
-    else if (humidity > 60) humidityStatus = "ความชื้นสูง 🌧️";
-    else if (humidity > 30) humidityStatus = "ความชื้นปกติ 🌤️";
-    else if (humidity > 20) humidityStatus = "ความชื้นต่ำ 🌵";
+    if (humidity > 85) humidityStatus = " ชื้นมาก อากาศอึดอัด เหงื่อไม่ระเหย 🌧️ ";
+    else if (humidity > 70) humidityStatus = " อากาศชื้น เหนียวตัว ระบายความร้อนได้ไม่ดี 💦 ";
+    else if (humidity > 60) humidityStatus = " เริ่มชื้น อาจรู้สึกอบอ้าวได้เล็กน้อย 🌫️ ";
+    else if (humidity > 40) humidityStatus = " อากาศสบาย เหมาะสมที่สุด ✅ ";
+    else if (humidity > 30) humidityStatus = " ค่อนข้างแห้ง ผิวเริ่มแห้งได้ 💨 ";
+    else if (humidity > 20) humidityStatus = " แห้งมาก ผิวแห้ง ปากแห้ง ระคายจมูก 🥵 ";
     else humidityStatus = "อากาศแห้งมาก 🏜️";
-
-    // ✅ ตรวจว่าฝนอาจจะตกหรือไม่
-    let rainForecastStatus: string;
-    if (humidity >= 80 && temp >= 24 && temp <= 32) {
-        rainForecastStatus = "🌧️ มีโอกาสฝนตก";
-    } else {
-        rainForecastStatus = "☀️ ไม่มีแนวโน้มฝนตก";
-    }
 
     const now = new Date();
     const thaiDate = getThaiDateParts(now);
-    const fullDateTime = `${thaiDate.dayOfWeek}ที่ ${thaiDate.day} ${thaiDate.month} พ.ศ. ${thaiDate.year} เวลา ${thaiDate.time} น.`;
+    const fullDateTime = `${thaiDate.dayOfWeek}ที่ ${thaiDate.day} ${thaiDate.month} พ.ศ. ${thaiDate.year} `;
 
     const message = `⚠ แจ้งเตือน! ⚠
-📅 วันที่: ${fullDateTime}
-☀ แสงแดด: ${light} lux (${lightStatus})
-🌡 อุณหภูมิ: ${temp} °C (${tempStatus})
-💧 ความชื้น: ${humidity} % (${humidityStatus})
-🌧️ สภาพอากาศ: ${rainForecastStatus}`;
+📅 วัน : ${fullDateTime}
+⏰ เวลา ${thaiDate.time} น.
+☀ แสงแดด : ${light}  lux  (${lightStatus})
+🌡 อุณหภูมิ : ${temp}  °C  (${tempStatus})
+💧 ความชื้น : ${humidity} %  (${humidityStatus})`;
 
-    // try {
-    //     const response = await axios.post(
-    //         "https://api.line.me/v2/bot/message/push",
-    //         {
-    //             to: LINE_GROUP_ID,
-    //             messages: [{ type: "text", text: message }],
-    //         },
-    //         {
-    //             headers: { Authorization: `Bearer ${LINE_ACCESS_TOKEN}` },
-    //         }
-    //     );
-    //     console.log("✅ ส่งข้อความแจ้งเตือนสำเร็จ!", response.data);
-    // } catch (error: unknown) {
-    //     const axiosError = error as AxiosError;
-    //     console.error("❌ แจ้งเตือนล้มเหลว:", axiosError.response?.data || axiosError.message);
-    // }
+    try {
+        const response = await axios.post(
+            "https://api.line.me/v2/bot/message/push",
+            {
+                to: LINE_GROUP_ID,
+                messages: [{ type: "text", text: message }],
+            },
+            {
+                headers: { Authorization: `Bearer ${LINE_ACCESS_TOKEN}` },
+            }
+        );
+        console.log("✅ ส่งข้อความแจ้งเตือนสำเร็จ!", response.data);
+    } catch (error: unknown) {
+        const axiosError = error as AxiosError;
+        console.error("❌ แจ้งเตือนล้มเหลว:", axiosError.response?.data || axiosError.message);
+    }
 }
 
-// let lastAlertTime = 0;
-// const ALERT_INTERVAL = 5 * 60 * 1000; // 5 นาที
+let lastAlertTime = 0;
+const ALERT_INTERVAL = 5 * 60 * 1000; // 5 นาที
 
-// // ✅ ตรวจสอบและส่งแจ้งเตือนทุก 5 นาที
-// async function checkAndSendAlert() {
-//     const currentTime = new Date().getTime();
-//     if (currentTime - lastAlertTime >= ALERT_INTERVAL) {
-//         if (lastSensorData) {
-//             const { light, temp, humidity } = lastSensorData;
-//             await sendLineNotification(light, temp, humidity);
-//             lastAlertTime = currentTime;
-//         }
-//     }
-// }
+// ✅ ตรวจสอบและส่งแจ้งเตือนทุก 5 นาที
+async function checkAndSendAlert() {
+    const currentTime = new Date().getTime();
+    if (currentTime - lastAlertTime >= ALERT_INTERVAL) {
+        if (lastSensorData) {
+            const { light, temp, humidity } = lastSensorData;
+            await sendLineNotification(light, temp, humidity);
+            lastAlertTime = currentTime;
+        }
+    }
+}
 
-// setInterval(checkAndSendAlert, ALERT_INTERVAL);
+setInterval(checkAndSendAlert, ALERT_INTERVAL);
 
-// ✅ รับข้อมูลจาก ESP32
+// ✅ รับข้อมูลจาก ESP8266
 app.post("/sensor-data", async (req: Request, res: Response) => {
     const { light, temp, humidity }: { light: number; temp: number; humidity: number } = req.body;
 
@@ -156,7 +157,6 @@ app.get("/latest", (req: Request, res: Response) => {
         res.status(404).json({ message: "❌ ไม่มีข้อมูลเซ็นเซอร์" });
     }
 });
-
 // ✅ เริ่มรันเซิร์ฟเวอร์
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
