@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,15 +8,26 @@
 </head>
 <body>
   <div class="container">
-    <h1>🌤☀️🔥 ระบบสภาพอากาศ IoT ☀️ </h1>
-    <p class="update-time"><span> 📅 อัปเดตล่าสุด : </span><span id="timestamp">--</span></p>
+    <h1>🌤☀️🔥 ระบบสภาพอากาศ IoT ☀️</h1>
+    <p class="update-time"><span>📅 วันล่าสุด : </span><span id="datestamp">--</span></p>
+    <p class="update-time"><span>⏰ เวลาล่าสุด : </span><span id="timestamp">--</span></p>
+
     <div class="status">
-      <p><span> 💡☀️🔥 แสง : </span> <span id="light"></span> <span id="light"> lux </span> ( <span id="light-status"></span> ) </p>
-      <p><span> 🌡️☀️🔥 อุณหภูมิ : </span> <span id="temp"></span> <span> °C </span> ( <span id="temp-status"></span>) </p>
-      <p><span> 💧 ความชื้น : </span><span id="humidity"></span> <span> % </span>( <span id="humidity-status"></span> )</p>
-      <p><strong> 🌧️ พยากรณ์ฝน :  </strong> <span id="rain-forecast"></span></p>      
+      <p id="light-box">
+        💡☀️🔥 แสง : <span id="light">--</span> lux<br />
+        (<span id="light-status">--</span>)
+      </p>
+      <p id="temp-box">
+        🌡️☀️🔥 อุณหภูมิ : <span id="temp">--</span> °C<br />
+        (<span id="temp-status">--</span>)
+      </p>
+      <p id="humidity-box">
+        💧 ความชื้น : <span id="humidity">--</span> %<br />
+        (<span id="humidity-status">--</span>)
+      </p>
     </div>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>

@@ -1,60 +1,183 @@
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #4caf50;
-    padding: 20px;
-    color: #333;
-    text-align: center;
-  }
-  
-  .container {
-    background: rgb(255, 255, 255);
-    border-radius: 16px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1);
-    max-width: 600px;
-    margin: auto;
-    padding: 20px;
-  }
-  
-  h1 {
-    margin-bottom: 20px;
-  }
-  
-  .status p,
-  p {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-  }
-  
-  span {
-    font-weight: bold;
-  }
-  
-  .update-time {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #080404;
-  }
-  
-  .status {
-    padding: 4px 8px;
-    border-radius: 5px;
-    color: black;
-  }
-  
-  /* 🌞 Light */
-  .light-bright { background-color: #f9a825; } /* แสงจ้ามาก */
-  .light-medium { background-color: #ffeb3b; color: #000; } /* แสงกลาง */
-  .light-low { background-color: #607d8b; } /* มืด */
-  
-  /* 🌡️ Temp */
-  .temp-hot { background-color: #e53935; }
-  .temp-warm { background-color: #fb8c00; }
-  .temp-cool { background-color: #29b6f6; }
-  
-  /* 💧 Humidity */
-  .humidity-high { background-color: #039be5; }
-  .humidity-low { background-color: #8d6e63; }
-  
-  /* 🌧️ Rain forecast */
-  .rain-yes { background-color: #4caf50; }
-  .rain-no { background-color: #90a4ae; }
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #4caf50;
+  padding: 20px;
+  color: #333;
+  text-align: center;
+}
+
+.container {
+  background: rgb(255, 255, 255);
+  border-radius: 16px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: auto;
+  padding: 60px;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+.status p,
+p {
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+  padding: 5px;
+  border-radius: 8px;
+}
+
+span {
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.update-time {
+  margin-top: 5px;
+  font-size: 1.5em;
+  color: #080404;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 5px;
+  color: black;
+}
+
+/* 🌞 Light */
+.light-level-1 {
+  background-color: #0d0d0d;
+  color: #fff;
+}
+
+.light-level-2 {
+  background-color: #1c1c1c;
+  color: #fff;
+}
+
+.light-level-3 {
+  background-color: #2e2e2e;
+  color: #fff;
+}
+
+.light-level-4 {
+  background-color: #404040;
+  color: #fff;
+}
+
+.light-level-5 {
+  background-color: #555555;
+  color: #fff;
+}
+
+.light-level-6 {
+  background-color: #777777;
+  color: #fff;
+}
+
+.light-level-7 {
+  background-color: #999999;
+  color: #000;
+}
+
+.light-level-8 {
+  background-color: #bbbbbb;
+  color: #000;
+}
+
+.light-level-9 {
+  background-color: #dddddd;
+  color: #000;
+}
+
+.light-level-10 {
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+.light-level-11 {
+  background-color: #fff176;
+  color: #000;
+}
+
+.light-level-12 {
+  background-color: #ffee58;
+  color: #000;
+}
+
+.light-level-13 {
+  background-color: #ffca28;
+  color: #000;
+}
+
+.light-level-14 {
+  background-color: #ff9800;
+  color: #fff;
+}
+
+.light-level-15 {
+  background-color: #ff5722;
+  color: #fff;
+}
+
+/* 🌡️ Temp */
+.temp-very-cold {
+  background-color: #2196f3;
+  color: #fff;
+}
+
+.temp-cool {
+  background-color: #29b6f6;
+  color: #fff;
+}
+
+.temp-warm {
+  background-color: #ffb300;
+  color: #fff;
+}
+
+.temp-hot {
+  background-color: #f4511e;
+  color: #fff;
+}
+
+.temp-very-hot {
+  background-color: #d32f2f;
+  color: #fff;
+}
+
+/* 💧 Humidity */
+.humidity-level-1 {
+  background-color: #fbe9e7;
+  color: #000;
+}
+
+.humidity-level-2 {
+  background-color: #ffccbc;
+  color: #000;
+}
+
+.humidity-level-3 {
+  background-color: #ffe0b2;
+  color: #000;
+}
+
+.humidity-level-4 {
+  background-color: #fff59d;
+  color: #000;
+}
+
+.humidity-level-5 {
+  background-color: #aed581;
+  color: #000;
+}
+
+.humidity-level-6 {
+  background-color: #4fc3f7;
+  color: #fff;
+}
+
+.humidity-level-7 {
+  background-color: #0288d1;
+  color: #fff;
+}
