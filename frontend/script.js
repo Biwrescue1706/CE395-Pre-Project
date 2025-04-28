@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:3000/latest";
+const API_URL = "http://localhost:3000/latest"; // ดึงข้อมูลเซ็นเซอร์
+const ASK_AI_URL = "http://localhost:3000/ask-ai"; // ถาม AI ผ่าน backend
 
 async function fetchSensorData() {
   try {
@@ -20,10 +21,11 @@ async function fetchSensorData() {
     document.getElementById("temp-status").textContent = getTempStatusText(temp);
     document.getElementById("humidity-status").textContent = getHumidityStatusText(humidity);
 
+    document.getElementById("ai-suggestion").textContent = getAISuggestion(light, temp, humidity);
+
     applyStatusColor("light-box", getLightClass(light));
     applyStatusColor("temp-box", getTempClass(temp));
     applyStatusColor("humidity-box", getHumidityClass(humidity));
-
   } catch (error) {
     console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error);
   }
@@ -46,57 +48,52 @@ function getThaiDateParts(date) {
 }
 
 function getLightStatusText(light) {
-  if (light > 65535) return "แสงแดดจ้ามากๆ 🌞";
-  else if (light > 60000) return "แสงสว่างมาก ☀️";
-  else if (light > 40000) return "แดดแรงกลางแจ้ง 🌤";
-  else if (light > 30000) return "แดดอ่อนหรือมีเมฆ 🌥";
-  else if (light > 20000) return "ฟ้าครึ้มใกล้ฝน 🌦";
-  else if (light > 15000) return "แสงธรรมชาติเยอะในร่ม 🌈";
-  else if (light > 10000) return "แสงจากหลอดไฟขนาดใหญ่ 💡";
-  else if (light > 7000) return "แสงในห้องสว่างมาก 💡";
-  else if (light > 4000) return "ไฟสว่างทั่วไป 💡";
-  else if (light > 2000) return "ห้องมีแสงไฟอ่อนๆ 🌙";
-  else if (light > 1000) return "เริ่มมืดลง 🌌";
-  else if (light > 500) return "แสงสลัว 🌑";
-  else if (light > 100) return "มืดมาก ต้องเพ่งมอง 🔦";
-  else if (light > 10) return "มืดเกือบสนิท 🕳️";
-  else return "มืดสนิท ⚫";
+  if (light > 50000) return "แดดจ้า ☀️";
+  if (light > 10000) return "กลางแจ้ง มีเมฆ หรือแดดอ่อน 🌤";
+  if (light > 5000) return "ฟ้าครึ้ม 🌥";
+  if (light > 1000) return "ห้องที่มีแสงธรรมชาติ 🌈";
+  if (light > 500) return "ออฟฟิศ หรือร้านค้า 💡";
+  if (light > 100) return "ห้องนั่งเล่น ไฟบ้าน 🌙";
+  if (light > 10) return "ไฟสลัว 🌑";
+  return "มืดมากๆ 🕳️";
 }
 
 function getTempStatusText(temp) {
-  if (temp > 35) return "อุณหภูมิสูงมาก ⚠️";
-  else if (temp >= 30) return "อุณหภูมิร้อน 🔥";
-  else if (temp >= 25) return "อุณหภูมิอุ่นๆ 🌞";
-  else if (temp >= 20) return "อุณหภูมิพอดี 🌤";
-  else return "อุณหูมิเย็น ❄️";
+  if (temp > 35) return "อุณหภูมิร้อนมาก ⚠️";
+  if (temp >= 30) return "อุณหภูมิร้อน 🔥";
+  if (temp >= 25) return "อุณหภูมิอุ่นๆ 🌞";
+  if (temp >= 20) return "อุณหภูมิพอดี 🌤";
+  return "อุณหูมิเย็น ❄️";
 }
 
 function getHumidityStatusText(humidity) {
   if (humidity > 85) return "ชื้นมาก อากาศอึดอัด เหงื่อไม่ระเหย 🌧️";
-  else if (humidity > 70) return "อากาศชื้น เหนียวตัว ระบายความร้อนได้ไม่ดี 💦";
-  else if (humidity > 60) return "เริ่มชื้น อาจรู้สึกอบอ้าวได้เล็กน้อย 🌫️";
-  else if (humidity > 40) return "อากาศสบาย เหมาะสมที่สุด ✅";
-  else if (humidity > 30) return "ค่อนข้างแห้ง ผิวเริ่มแห้งได้ 💨";
-  else if (humidity > 20) return "แห้งมาก ผิวแห้ง ปากแห้ง ระคายจมูก 🥵";
-  else return "อากาศแห้งมาก 🏜️";
+  if (humidity > 70) return "อากาศชื้น เหนียวตัว ระบายความร้อนได้ไม่ดี 💦";
+  if (humidity > 60) return "เริ่มชื้น อาจรู้สึกอบอ้าวได้เล็กน้อย 🌫️";
+  if (humidity > 40) return "อากาศสบาย เหมาะสมที่สุด ✅";
+  if (humidity > 30) return "ค่อนข้างแห้ง ผิวเริ่มแห้งได้ 💨";
+  if (humidity > 20) return "แห้งมาก ผิวแห้ง ปากแห้ง ระคายจมูก 🥵";
+  return "อากาศแห้งมาก 🏜️";
+}
+
+function getAISuggestion(light, temp, humidity) {
+  if (light < 5000 && humidity > 80) return "🌧️ มีโอกาสฝนตกสูง ควรพกร่มออกไปด้วย!";
+  if (temp > 35 && humidity < 50) return "🔥 อากาศร้อนจัด ควรดื่มน้ำและหลีกเลี่ยงแดด!";
+  if (temp >= 30 && humidity > 70) return "💦 อากาศร้อนชื้น อาจทำให้เหนียวตัว!";
+  if (temp >= 25 && humidity >= 40 && light > 10000) return "🌤 อากาศดี น่าออกไปเดินเล่น!";
+  if (temp < 20) return "❄️ อากาศเย็นสบาย ควรใส่เสื้อกันหนาวบางๆ";
+  return "✅ อากาศปกติ น่าอยู่สบาย!";
 }
 
 function getLightClass(light) {
-  if (light > 60000) return "light-level-15";
-  if (light > 55000) return "light-level-14";
-  if (light > 50000) return "light-level-13";
-  if (light > 45000) return "light-level-12";
-  if (light > 40000) return "light-level-11";
-  if (light > 35000) return "light-level-10";
-  if (light > 30000) return "light-level-9";
-  if (light > 25000) return "light-level-8";
-  if (light > 20000) return "light-level-7";
-  if (light > 15000) return "light-level-6";
-  if (light > 10000) return "light-level-5";
-  if (light > 5000) return "light-level-4";
-  if (light > 2000) return "light-level-3";
-  if (light > 500) return "light-level-2";
-  return "light-level-1";
+  if (light > 50000) return "light-very-bright";
+  if (light > 10000) return "light-bright";
+  if (light > 5000) return "light-cloudy";
+  if (light > 1000) return "light-natural";
+  if (light > 500) return "light-office";
+  if (light > 100) return "light-room";
+  if (light > 10) return "light-dim";
+  return "light-dark";
 }
 
 function getTempClass(temp) {
@@ -123,5 +120,29 @@ function applyStatusColor(id, className) {
   if (className) el.classList.add(className);
 }
 
+/* ✅ ฟังก์ชันถาม AI ผ่าน backend */
+async function askAI() {
+  const question = document.getElementById("user-question").value.trim();
+  if (!question) {
+    document.getElementById("ai-answer").textContent = "⚠️ กรุณาพิมพ์คำถามก่อนนะคะ";
+    return;
+  }
+
+  try {
+    document.getElementById("ai-answer").textContent = "⏳ กำลังถาม AI...";
+    const response = await fetch(ASK_AI_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+    const data = await response.json();
+    document.getElementById("ai-answer").textContent = data.answer || "❌ ไม่มีคำตอบจาก AI";
+  } catch (error) {
+    console.error(error);
+    document.getElementById("ai-answer").textContent = "❌ ไม่สามารถติดต่อ AI ได้";
+  }
+}
+
+/* ✅ โหลดข้อมูลทุก 1 วินาที */
 fetchSensorData();
 setInterval(fetchSensorData, 1000);

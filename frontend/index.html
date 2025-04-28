@@ -9,6 +9,7 @@
 <body>
   <div class="container">
     <h1>🌤☀️🔥 ระบบสภาพอากาศ IoT ☀️</h1>
+
     <p class="update-time"><span>📅 วันล่าสุด : </span><span id="datestamp">--</span></p>
     <p class="update-time"><span>⏰ เวลาล่าสุด : </span><span id="timestamp">--</span></p>
 
@@ -26,7 +27,13 @@
         (<span id="humidity-status">--</span>)
       </p>
     </div>
-  </div>
+
+    <div class="ai-chat">
+      <h2>💬 ถาม AI เกี่ยวกับสภาพอากาศ</h2>
+      <input type="text" id="user-question" placeholder="พิมพ์คำถามเช่น 'ควรพกร่มไหม'" />
+      <button onclick="askAI()">ถาม AI</button>
+      <p id="ai-answer">--</p>
+    </div>    
 
   <script src="script.js"></script>
 </body>

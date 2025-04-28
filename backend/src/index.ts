@@ -7,16 +7,17 @@ import cors from "cors";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(bodyParser.json());
-
 const LINE_ACCESS_TOKEN: string = process.env.LINE_ACCESS_TOKEN || "";
 const LINE_GROUP_ID: string = process.env.LINE_GROUP_ID || "";
+const OPENAI_API_KEY: string = process.env.OPENAI_API_KEY || "";
+
+app.use(cors());
+app.use(bodyParser.json());
 
 // เก็บข้อมูลเซ็นเซอร์ล่าสุด
 let lastSensorData: { light: number; temp: number; humidity: number } | null = null;
 
-// ✅ ฟังก์ชันแปลงวัน/เวลาเป็นภาษาไทย
+// ✅ แปลงวัน/เวลาเป็นภาษาไทย
 function getThaiDateParts(date: Date) {
     const optionsDate: Intl.DateTimeFormatOptions = {
         weekday: "long",
@@ -24,56 +25,41 @@ function getThaiDateParts(date: Date) {
         month: "long",
         year: "numeric",
     };
-
     const optionsTime: Intl.DateTimeFormatOptions = {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
     };
-
     const thDateFormatter = new Intl.DateTimeFormat("th-TH", optionsDate);
     const thTimeFormatter = new Intl.DateTimeFormat("th-TH", optionsTime);
 
     const parts = thDateFormatter.formatToParts(date);
     const time = thTimeFormatter.format(date);
 
-    const dayOfWeek = parts.find(p => p.type === "weekday")?.value ?? "";
-    const day = parts.find(p => p.type === "day")?.value ?? "";
-    const month = parts.find(p => p.type === "month")?.value ?? "";
-    const year = parts.find(p => p.type === "year")?.value ?? "";
-
     return {
-        dayOfWeek,
-        day,
-        month,
-        year,
-        time
+        dayOfWeek: parts.find(p => p.type === "weekday")?.value ?? "",
+        day: parts.find(p => p.type === "day")?.value ?? "",
+        month: parts.find(p => p.type === "month")?.value ?? "",
+        year: parts.find(p => p.type === "year")?.value ?? "",
+        time,
     };
 }
 
-// ✅ ฟังก์ชันส่งข้อความ LINE
+// ✅ ส่งแจ้งเตือน LINE OA
 async function sendLineNotification(light: number, temp: number, humidity: number): Promise<void> {
     let lightStatus = "";
     let tempStatus = "";
     let humidityStatus = "";
 
-
-    // แปลค่าความสว่าง
-    if (light > 65535) lightStatus = "แสงแดดจ้ามากๆ 🌞";
-    else if (light > 60000) lightStatus = "แสงสว่างมาก ☀️";
-    else if (light > 40000) lightStatus = "แดดแรงกลางแจ้ง 🌤";
-    else if (light > 30000) lightStatus = "แดดอ่อนหรือมีเมฆ 🌥";
-    else if (light > 20000) lightStatus = "ฟ้าครึ้มใกล้ฝน 🌦";
-    else if (light > 15000) lightStatus = "แสงธรรมชาติเยอะในร่ม 🌈";
-    else if (light > 10000) lightStatus = "แสงจากหลอดไฟขนาดใหญ่ 💡";
-    else if (light > 7000) lightStatus = "แสงในห้องสว่างมาก 💡";
-    else if (light > 4000) lightStatus = "ไฟสว่างทั่วไป 💡";
-    else if (light > 2000) lightStatus = "ห้องมีแสงไฟอ่อนๆ 🌙";
-    else if (light > 1000) lightStatus = "เริ่มมืดลง 🌌";
-    else if (light > 500) lightStatus = "แสงสลัว 🌑";
-    else if (light > 100) lightStatus = "มืดมาก ต้องเพ่งมอง 🔦";
-    else if (light > 10) lightStatus = "มืดเกือบสนิท 🕳️";
-    else lightStatus = "มืดสนิท ⚫";
+    // แปลค่าแสง
+    if (light > 50000) lightStatus = "แดดจ้า ☀️";
+    else if (light > 10000) lightStatus = "กลางแจ้ง มีเมฆ หรือแดดอ่อน 🌤";
+    else if (light > 5000) lightStatus = "ฟ้าครึ้ม 🌥";
+    else if (light > 1000) lightStatus = "ห้องที่มีแสงธรรมชาติ 🌈";
+    else if (light > 500) lightStatus = "ออฟฟิศ หรือร้านค้า 💡";
+    else if (light > 100) lightStatus = "ห้องนั่งเล่น ไฟบ้าน 🌙";
+    else if (light > 10) lightStatus = "ไฟสลัว 🌑";
+    else lightStatus = "มืดมากๆ 🕳️";
 
     // แปลค่าอุณหภูมิ
     if (temp > 35) tempStatus = "อุณหภูมิร้อนมาก ⚠️";
@@ -83,24 +69,24 @@ async function sendLineNotification(light: number, temp: number, humidity: numbe
     else tempStatus = "อุณหูมิเย็น ❄️";
 
     // แปลค่าความชื้น
-    if (humidity > 85) humidityStatus = " ชื้นมาก อากาศอึดอัด เหงื่อไม่ระเหย 🌧️ ";
-    else if (humidity > 70) humidityStatus = " อากาศชื้น เหนียวตัว ระบายความร้อนได้ไม่ดี 💦 ";
-    else if (humidity > 60) humidityStatus = " เริ่มชื้น อาจรู้สึกอบอ้าวได้เล็กน้อย 🌫️ ";
-    else if (humidity > 40) humidityStatus = " อากาศสบาย เหมาะสมที่สุด ✅ ";
-    else if (humidity > 30) humidityStatus = " ค่อนข้างแห้ง ผิวเริ่มแห้งได้ 💨 ";
-    else if (humidity > 20) humidityStatus = " แห้งมาก ผิวแห้ง ปากแห้ง ระคายจมูก 🥵 ";
+    if (humidity > 85) humidityStatus = "ชื้นมาก อากาศอึดอัด เหงื่อไม่ระเหย 🌧️";
+    else if (humidity > 70) humidityStatus = "อากาศชื้น เหนียวตัว ระบายความร้อนได้ไม่ดี 💦";
+    else if (humidity > 60) humidityStatus = "เริ่มชื้น อาจรู้สึกอบอ้าวได้เล็กน้อย 🌫️";
+    else if (humidity > 40) humidityStatus = "อากาศสบาย เหมาะสมที่สุด ✅";
+    else if (humidity > 30) humidityStatus = "ค่อนข้างแห้ง ผิวเริ่มแห้งได้ 💨";
+    else if (humidity > 20) humidityStatus = "แห้งมาก ผิวแห้ง ปากแห้ง ระคายจมูก 🥵";
     else humidityStatus = "อากาศแห้งมาก 🏜️";
 
     const now = new Date();
     const thaiDate = getThaiDateParts(now);
-    const fullDateTime = `${thaiDate.dayOfWeek}ที่ ${thaiDate.day} ${thaiDate.month} พ.ศ. ${thaiDate.year} `;
+    const fullDateTime = `${thaiDate.dayOfWeek}ที่ ${thaiDate.day} ${thaiDate.month} พ.ศ. ${thaiDate.year}`;
 
     const message = `⚠ แจ้งเตือน! ⚠
 📅 วัน : ${fullDateTime}
 ⏰ เวลา ${thaiDate.time} น.
-☀ แสงแดด : ${light}  lux  (${lightStatus})
-🌡 อุณหภูมิ : ${temp}  °C  (${tempStatus})
-💧 ความชื้น : ${humidity} %  (${humidityStatus})`;
+☀ แสงแดด : ${light} lux (${lightStatus})
+🌡 อุณหภูมิ : ${temp} °C (${tempStatus})
+💧 ความชื้น : ${humidity} % (${humidityStatus})`;
 
     try {
         const response = await axios.post(
@@ -120,27 +106,23 @@ async function sendLineNotification(light: number, temp: number, humidity: numbe
     }
 }
 
+// ตรวจสอบแจ้งเตือนทุก 5 นาที
 let lastAlertTime = 0;
 const ALERT_INTERVAL = 5 * 60 * 1000; // 5 นาที
 
-// ✅ ตรวจสอบและส่งแจ้งเตือนทุก 5 นาที
 async function checkAndSendAlert() {
     const currentTime = new Date().getTime();
-    if (currentTime - lastAlertTime >= ALERT_INTERVAL) {
-        if (lastSensorData) {
-            const { light, temp, humidity } = lastSensorData;
-            await sendLineNotification(light, temp, humidity);
-            lastAlertTime = currentTime;
-        }
+    if (currentTime - lastAlertTime >= ALERT_INTERVAL && lastSensorData) {
+        const { light, temp, humidity } = lastSensorData;
+        await sendLineNotification(light, temp, humidity);
+        lastAlertTime = currentTime;
     }
 }
+// setInterval(checkAndSendAlert, 60 * 1000); // ตรวจสอบทุก 1 นาที
 
-setInterval(checkAndSendAlert, ALERT_INTERVAL);
-
-// ✅ รับข้อมูลจาก ESP8266
-app.post("/sensor-data", async (req: Request, res: Response) => {
+// ✅ [POST] รับข้อมูลจาก ESP32
+app.post("/sensor-data", (req: Request, res: Response) => {
     const { light, temp, humidity }: { light: number; temp: number; humidity: number } = req.body;
-
     if (light !== undefined && temp !== undefined && humidity !== undefined) {
         lastSensorData = { light, temp, humidity };
         res.json({ message: "✅ รับข้อมูลแล้ว!" });
@@ -149,7 +131,7 @@ app.post("/sensor-data", async (req: Request, res: Response) => {
     }
 });
 
-// ✅ ดึงข้อมูลล่าสุด
+// ✅ [GET] ดึงข้อมูลล่าสุด
 app.get("/latest", (req: Request, res: Response) => {
     if (lastSensorData) {
         res.json(lastSensorData);
@@ -157,6 +139,55 @@ app.get("/latest", (req: Request, res: Response) => {
         res.status(404).json({ message: "❌ ไม่มีข้อมูลเซ็นเซอร์" });
     }
 });
+
+// ✅ [POST] ถาม AI ผ่าน OpenAI API
+app.post("/ask-ai", async (req: Request, res: Response): Promise<void> => {
+    const { question } = req.body;
+
+    if (!lastSensorData) {
+        res.status(400).json({ error: "❌ ไม่มีข้อมูลเซ็นเซอร์ล่าสุด" });
+        return
+    }
+
+    const { light, temp, humidity } = lastSensorData;
+
+    const systemPrompt = `
+    คุณเป็นผู้ช่วยวิเคราะห์สภาพอากาศจากข้อมูลเซ็นเซอร์ IoT
+    ข้อมูลปัจจุบัน:
+    - แสง: ${light} lux
+    - อุณหภูมิ: ${temp} °C
+    - ความชื้น: ${humidity} %
+    ให้ตอบสั้นๆ เป็นภาษาไทย
+    `;
+
+    try {
+        const response = await axios.post(
+            "https://api.openai.com/v1/chat/completions",
+            {
+                model: "gpt-3.5-turbo",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: question }
+                ],
+                temperature: 0.7,
+            },
+            {
+                headers: {
+                    "Authorization": `Bearer ${OPENAI_API_KEY}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        const answer = response.data.choices?.[0]?.message?.content || "❌ ไม่สามารถตอบได้";
+        res.json({ answer });
+
+    } catch (error: any) {
+        console.error(error.response?.data || error.message);
+        res.status(500).json({ error: "❌ ขออภัย, เกิดข้อผิดพลาดในการเชื่อมต่อ OpenAI" });
+    }
+});
+
 // ✅ เริ่มรันเซิร์ฟเวอร์
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

@@ -1,183 +1,134 @@
+/* ตั้งค่าพื้นฐาน */
 body {
+  margin: 0;
+  padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #4caf50;
-  padding: 20px;
+  min-height: 100vh;
   color: #333;
   text-align: center;
 }
 
 .container {
-  background: rgb(255, 255, 255);
+  max-width: 700px;
+  margin: 30px auto;
+  padding: 40px;
+  background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
-  margin: auto;
-  padding: 60px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-  margin-bottom: 10px;
-}
-
-.status p,
-p {
-  font-size: 1.5rem;
-  margin-bottom: 5px;
-  padding: 5px;
-  border-radius: 8px;
-}
-
-span {
-  font-weight: bold;
-  font-size: 1.5rem;
+  font-size: 2rem;
+  margin-bottom: 20px;
 }
 
 .update-time {
-  margin-top: 5px;
-  font-size: 1.5em;
-  color: #080404;
+  font-size: 1.2rem;
+  margin: 5px 0;
+  color: #555;
 }
 
 .status {
-  padding: 4px 8px;
-  border-radius: 5px;
-  color: black;
+  margin-top: 20px;
 }
 
-/* 🌞 Light */
-.light-level-1 {
-  background-color: #0d0d0d;
-  color: #fff;
+.status p {
+  font-size: 1.4rem;
+  margin: 15px 0;
+  padding: 15px;
+  border-radius: 10px;
+  background: #f0f4f7;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
 }
 
-.light-level-2 {
-  background-color: #1c1c1c;
-  color: #fff;
+/* สีพื้นหลังตามแสง (Light) */
+.light-very-bright { background-color: #ffe066; }
+.light-bright { background-color: #fff7a1; }
+.light-cloudy { background-color: #d3d3d3; }
+.light-natural { background-color: #c6e2ff; }
+.light-office { background-color: #e6f7ff; }
+.light-room { background-color: #f7f7f7; }
+.light-dim { background-color: #dcdcdc; }
+.light-dark { background-color: #555555; color: #fff; }
+
+/* สีพื้นหลังตามอุณหภูมิ (Temp) */
+.temp-very-hot { background-color: #ff6b6b; }
+.temp-hot { background-color: #ffa07a; }
+.temp-warm { background-color: #ffd580; }
+.temp-cool { background-color: #b2ebf2; }
+.temp-very-cold { background-color: #81d4fa; }
+
+/* สีพื้นหลังตามความชื้น (Humidity) */
+.humidity-level-7 { background-color: #9be7ff; }
+.humidity-level-6 { background-color: #b3e5fc; }
+.humidity-level-5 { background-color: #cce7ff; }
+.humidity-level-4 { background-color: #e1f5fe; }
+.humidity-level-3 { background-color: #f0f9ff; }
+.humidity-level-2 { background-color: #f8fbff; }
+.humidity-level-1 { background-color: #ffffff; }
+
+/* ส่วนวิเคราะห์ AI (อัตโนมัติ) */
+.ai-analysis {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f3f0ff;
+  border-radius: 16px;
+  border: 2px dashed #7c4dff;
 }
 
-.light-level-3 {
-  background-color: #2e2e2e;
-  color: #fff;
+.ai-analysis h2 {
+  margin-bottom: 10px;
+  color: #7c4dff;
 }
 
-.light-level-4 {
-  background-color: #404040;
-  color: #fff;
+#ai-suggestion {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #333;
 }
 
-.light-level-5 {
-  background-color: #555555;
-  color: #fff;
+/* ส่วนถาม AI */
+.ai-chat {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #e0f7fa;
+  border-radius: 16px;
+  border: 2px dashed #00acc1;
 }
 
-.light-level-6 {
-  background-color: #777777;
-  color: #fff;
+.ai-chat h2 {
+  margin-bottom: 10px;
+  color: #00838f;
 }
 
-.light-level-7 {
-  background-color: #999999;
-  color: #000;
+#user-question {
+  width: 80%;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
 }
 
-.light-level-8 {
-  background-color: #bbbbbb;
-  color: #000;
+button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #00acc1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.light-level-9 {
-  background-color: #dddddd;
-  color: #000;
+button:hover {
+  background-color: #00838f;
 }
 
-.light-level-10 {
-  background-color: #f0f0f0;
-  color: #000;
-}
-
-.light-level-11 {
-  background-color: #fff176;
-  color: #000;
-}
-
-.light-level-12 {
-  background-color: #ffee58;
-  color: #000;
-}
-
-.light-level-13 {
-  background-color: #ffca28;
-  color: #000;
-}
-
-.light-level-14 {
-  background-color: #ff9800;
-  color: #fff;
-}
-
-.light-level-15 {
-  background-color: #ff5722;
-  color: #fff;
-}
-
-/* 🌡️ Temp */
-.temp-very-cold {
-  background-color: #2196f3;
-  color: #fff;
-}
-
-.temp-cool {
-  background-color: #29b6f6;
-  color: #fff;
-}
-
-.temp-warm {
-  background-color: #ffb300;
-  color: #fff;
-}
-
-.temp-hot {
-  background-color: #f4511e;
-  color: #fff;
-}
-
-.temp-very-hot {
-  background-color: #d32f2f;
-  color: #fff;
-}
-
-/* 💧 Humidity */
-.humidity-level-1 {
-  background-color: #fbe9e7;
-  color: #000;
-}
-
-.humidity-level-2 {
-  background-color: #ffccbc;
-  color: #000;
-}
-
-.humidity-level-3 {
-  background-color: #ffe0b2;
-  color: #000;
-}
-
-.humidity-level-4 {
-  background-color: #fff59d;
-  color: #000;
-}
-
-.humidity-level-5 {
-  background-color: #aed581;
-  color: #000;
-}
-
-.humidity-level-6 {
-  background-color: #4fc3f7;
-  color: #fff;
-}
-
-.humidity-level-7 {
-  background-color: #0288d1;
-  color: #fff;
+#ai-answer {
+  margin-top: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
 }
