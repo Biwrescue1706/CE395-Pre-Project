@@ -108,7 +108,7 @@ async function sendLineNotification(light: number, temp: number, humidity: numbe
 
 // ตรวจสอบแจ้งเตือนทุก 5 นาที
 let lastAlertTime = 0;
-const ALERT_INTERVAL = 5 * 60 * 1000; // 5 นาที
+const ALERT_INTERVAL = 5*60*1000 ; // 5 นาที
 
 async function checkAndSendAlert() {
     const currentTime = new Date().getTime();
@@ -118,7 +118,7 @@ async function checkAndSendAlert() {
         lastAlertTime = currentTime;
     }
 }
-// setInterval(checkAndSendAlert, 60 * 1000); // ตรวจสอบทุก 1 นาที
+setInterval(checkAndSendAlert, 60 * 1000); // ตรวจสอบทุก 1 นาที
 
 // ✅ [POST] รับข้อมูลจาก ESP32
 app.post("/sensor-data", (req: Request, res: Response) => {
