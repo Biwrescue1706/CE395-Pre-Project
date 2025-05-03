@@ -1,2 +1,20 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+
+# Prisma DB/ENV
+.env
+.env.local
+prisma/dev.db
+prisma/.env
+
+# Logs
+*.log
+
+# Docker volume (ถ้ามี)
+pgdata/

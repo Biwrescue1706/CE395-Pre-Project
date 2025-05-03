@@ -1,4 +1,56 @@
-/* ===== ฟอนต์และพื้นหลังหลัก ===== */
+#ai-answer {
+  margin-top: 15px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.ai-box {
+  background-color: #e0f7fa;
+  margin: 40px auto;
+  padding: 30px 20px;
+  border-radius: 16px;
+  max-width: 600px;
+}
+
+.ai-box h2 {
+  color: #00796b;
+  margin-bottom: 20px;
+}
+
+.ai-form {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ai-form button {
+  background-color: #00acc1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.ai-form button:hover {
+  background-color: #008ba3;
+}
+
+.ai-form input {
+  width: 65%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.bold-text {
+  font-weight: bold;
+}
+
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #4caf50;
@@ -8,30 +60,16 @@ body {
   text-align: center;
 }
 
-/* ===== หัวข้อโปรเจกต์ ===== */
-.header {
-  background-color: #e8f5e9;
-  padding: 30px 20px;
-  border-radius: 0 0 20px 20px;
-}
-
-.header h1 {
+.date-text {
   font-size: 2rem;
-  margin-bottom: 8px;
+  color: #050505;
 }
 
-.header h2 {
-  font-size: 1rem;
-  font-weight: normal;
-  color: #555;
-}
-
-/* ===== วันและเวลา ===== */
 .datetime-box {
   background-color: #ffffff;
-  padding: 15px;
+  padding: 10px;
   margin: 20px auto;
-  max-width: 400px;
+  max-width: 800px;
   border-radius: 16px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   font-size: 1.1rem;
@@ -41,13 +79,88 @@ body {
   margin: 6px 0;
 }
 
-/* ===== กล่องแสดงค่าจากเซ็นเซอร์ ===== */
-.sensor-wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 30px;
-  margin: 30px auto;
+.header {
+  background-color: #ffffff;
+  padding: 15px;
+  border-radius: 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto;
+  margin-top: 20px;
+}
+
+.header h1 {
+  font-size: 2.3rem;
+  margin-bottom: 8px;
+}
+
+.header h2 {
+  font-size: 1.3rem;
+  font-weight: normal;
+  color: #030303;
+}
+
+.humidity-level-1 {
+  background-color: #ffffff;
+}
+
+.humidity-level-2 {
+  background-color: #f8fbff;
+}
+
+.humidity-level-3 {
+  background-color: #f0f9ff;
+}
+
+.humidity-level-4 {
+  background-color: #e1f5fe;
+}
+
+.humidity-level-5 {
+  background-color: #cce7ff;
+}
+
+.humidity-level-6 {
+  background-color: #b3e5fc;
+}
+
+.humidity-level-7 {
+  background-color: #9be7ff;
+}
+
+.light-bright {
+  background-color: #fff7a1;
+}
+
+.light-cloudy {
+  background-color: #d3d3d3;
+}
+
+.light-dark {
+  background-color: #555555;
+  color: #fff;
+}
+
+.light-dim {
+  background-color: #dcdcdc;
+}
+
+.light-natural {
+  background-color: #c6e2ff;
+}
+
+.light-office {
+  background-color: #e6f7ff;
+}
+
+.light-room {
+  background-color: #f7f7f7;
+}
+
+.light-very-bright {
+  background-color: #ffe066;
 }
 
 .sensor-card {
@@ -79,145 +192,40 @@ body {
   color: #888;
 }
 
+.sensor-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+  margin: 30px auto;
+}
+
 .status-text {
   font-size: 1rem;
   margin-top: 8px;
   color: #333;
 }
 
-/* ===== สีพื้นหลังตามสถานะ ===== */
-.light-very-bright {
-  background-color: #ffe066;
-}
-
-.light-bright {
-  background-color: #fff7a1;
-}
-
-.light-cloudy {
-  background-color: #d3d3d3;
-}
-
-.light-natural {
-  background-color: #c6e2ff;
-}
-
-.light-office {
-  background-color: #e6f7ff;
-}
-
-.light-room {
-  background-color: #f7f7f7;
-}
-
-.light-dim {
-  background-color: #dcdcdc;
-}
-
-.light-dark {
-  background-color: #555555;
-  color: #fff;
-}
-
-.temp-very-hot {
-  background-color: #ff6b6b;
+.temp-cool {
+  background-color: #b2ebf2;
 }
 
 .temp-hot {
   background-color: #ffa07a;
 }
 
-.temp-warm {
-  background-color: #ffd580;
-}
-
-.temp-cool {
-  background-color: #b2ebf2;
-}
-
 .temp-very-cold {
   background-color: #81d4fa;
 }
 
-.humidity-level-7 {
-  background-color: #9be7ff;
+.temp-very-hot {
+  background-color: #ff6b6b;
 }
 
-.humidity-level-6 {
-  background-color: #b3e5fc;
+.temp-warm {
+  background-color: #ffd580;
 }
 
-.humidity-level-5 {
-  background-color: #cce7ff;
-}
-
-.humidity-level-4 {
-  background-color: #e1f5fe;
-}
-
-.humidity-level-3 {
-  background-color: #f0f9ff;
-}
-
-.humidity-level-2 {
-  background-color: #f8fbff;
-}
-
-.humidity-level-1 {
-  background-color: #ffffff;
-}
-
-/* ===== AI Chat ===== */
-.ai-box {
-  background-color: #e0f7fa;
-  margin: 40px auto;
-  padding: 30px 20px;
-  border-radius: 16px;
-  max-width: 600px;
-}
-
-.ai-box h2 {
-  color: #00796b;
-  margin-bottom: 20px;
-}
-
-.ai-form {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.ai-form input {
-  width: 65%;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-}
-
-.ai-form button {
-  background-color: #00acc1;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.ai-form button:hover {
-  background-color: #008ba3;
-}
-
-#ai-answer {
-  margin-top: 15px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-}
-
-/* ===== Responsive Layout ===== */
 @media (max-width: 768px) {
   .sensor-wrapper {
     flex-direction: column;
@@ -236,8 +244,4 @@ body {
   .ai-form button {
     width: 100%;
   }
-}
-
-.bold-text {
-  font-weight: bold;
 }
