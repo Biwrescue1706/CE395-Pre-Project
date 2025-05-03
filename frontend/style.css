@@ -14,10 +14,12 @@ body {
   padding: 30px 20px;
   border-radius: 0 0 20px 20px;
 }
+
 .header h1 {
   font-size: 2rem;
   margin-bottom: 8px;
 }
+
 .header h2 {
   font-size: 1rem;
   font-weight: normal;
@@ -34,6 +36,7 @@ body {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   font-size: 1.1rem;
 }
+
 .datetime-box p {
   margin: 6px 0;
 }
@@ -46,6 +49,7 @@ body {
   gap: 30px;
   margin: 30px auto;
 }
+
 .sensor-card {
   background-color: #ffffff;
   border-radius: 16px;
@@ -54,22 +58,27 @@ body {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 .sensor-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
+
 .sensor-card h2 {
   font-size: 1.4rem;
   color: #2e7d32;
 }
+
 .sensor-card p {
   font-size: 2.2rem;
   margin: 8px 0 4px;
   color: #000;
 }
+
 .sensor-card small {
   color: #888;
 }
+
 .status-text {
   font-size: 1rem;
   margin-top: 8px;
@@ -77,28 +86,86 @@ body {
 }
 
 /* ===== สีพื้นหลังตามสถานะ ===== */
-.light-very-bright { background-color: #ffe066; }
-.light-bright       { background-color: #fff7a1; }
-.light-cloudy       { background-color: #d3d3d3; }
-.light-natural      { background-color: #c6e2ff; }
-.light-office       { background-color: #e6f7ff; }
-.light-room         { background-color: #f7f7f7; }
-.light-dim          { background-color: #dcdcdc; }
-.light-dark         { background-color: #555555; color: #fff; }
+.light-very-bright {
+  background-color: #ffe066;
+}
 
-.temp-very-hot      { background-color: #ff6b6b; }
-.temp-hot           { background-color: #ffa07a; }
-.temp-warm          { background-color: #ffd580; }
-.temp-cool          { background-color: #b2ebf2; }
-.temp-very-cold     { background-color: #81d4fa; }
+.light-bright {
+  background-color: #fff7a1;
+}
 
-.humidity-level-7   { background-color: #9be7ff; }
-.humidity-level-6   { background-color: #b3e5fc; }
-.humidity-level-5   { background-color: #cce7ff; }
-.humidity-level-4   { background-color: #e1f5fe; }
-.humidity-level-3   { background-color: #f0f9ff; }
-.humidity-level-2   { background-color: #f8fbff; }
-.humidity-level-1   { background-color: #ffffff; }
+.light-cloudy {
+  background-color: #d3d3d3;
+}
+
+.light-natural {
+  background-color: #c6e2ff;
+}
+
+.light-office {
+  background-color: #e6f7ff;
+}
+
+.light-room {
+  background-color: #f7f7f7;
+}
+
+.light-dim {
+  background-color: #dcdcdc;
+}
+
+.light-dark {
+  background-color: #555555;
+  color: #fff;
+}
+
+.temp-very-hot {
+  background-color: #ff6b6b;
+}
+
+.temp-hot {
+  background-color: #ffa07a;
+}
+
+.temp-warm {
+  background-color: #ffd580;
+}
+
+.temp-cool {
+  background-color: #b2ebf2;
+}
+
+.temp-very-cold {
+  background-color: #81d4fa;
+}
+
+.humidity-level-7 {
+  background-color: #9be7ff;
+}
+
+.humidity-level-6 {
+  background-color: #b3e5fc;
+}
+
+.humidity-level-5 {
+  background-color: #cce7ff;
+}
+
+.humidity-level-4 {
+  background-color: #e1f5fe;
+}
+
+.humidity-level-3 {
+  background-color: #f0f9ff;
+}
+
+.humidity-level-2 {
+  background-color: #f8fbff;
+}
+
+.humidity-level-1 {
+  background-color: #ffffff;
+}
 
 /* ===== AI Chat ===== */
 .ai-box {
@@ -108,16 +175,19 @@ body {
   border-radius: 16px;
   max-width: 600px;
 }
+
 .ai-box h2 {
   color: #00796b;
   margin-bottom: 20px;
 }
+
 .ai-form {
   display: flex;
   justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
 }
+
 .ai-form input {
   width: 65%;
   padding: 10px;
@@ -125,6 +195,7 @@ body {
   border: 1px solid #ccc;
   font-size: 1rem;
 }
+
 .ai-form button {
   background-color: #00acc1;
   color: white;
@@ -134,9 +205,11 @@ body {
   font-size: 1rem;
   cursor: pointer;
 }
+
 .ai-form button:hover {
   background-color: #008ba3;
 }
+
 #ai-answer {
   margin-top: 15px;
   font-size: 1.2rem;
@@ -163,4 +236,8 @@ body {
   .ai-form button {
     width: 100%;
   }
+}
+
+.bold-text {
+  font-weight: bold;
 }

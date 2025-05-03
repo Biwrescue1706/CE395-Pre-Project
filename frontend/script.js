@@ -15,7 +15,7 @@ async function fetchSensorData() {
     const now = new Date();
     const thaiDate = getThaiDateParts(now);
     document.getElementById("datestamp").textContent = `${thaiDate.dayOfWeek}ที่ ${thaiDate.day} ${thaiDate.month} พ.ศ. ${thaiDate.year}`;
-    document.getElementById("timestamp").textContent = `เวลา : ${thaiDate.time} น.`;
+    document.getElementById("timestamp").textContent = `${thaiDate.time} น.`;
 
     document.getElementById("light-status").textContent = getLightStatusText(light);
     document.getElementById("temp-status").textContent = getTempStatusText(temp);
