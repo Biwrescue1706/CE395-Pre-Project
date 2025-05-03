@@ -1,5 +1,5 @@
-const API_URL = "http://localhost:3000/latest"; // ดึงข้อมูลเซ็นเซอร์
-const ASK_AI_URL = "http://localhost:3000/ask-ai"; // ถาม AI ผ่าน backend
+const API_URL = "https://ce395backend.loca.lt/latest"; // ดึงข้อมูลเซ็นเซอร์
+const ASK_AI_URL = "https://ce395backend.loca.lt/ask-ai"; // ถาม AI ผ่าน backend
 
 async function fetchSensorData() {
   try {
