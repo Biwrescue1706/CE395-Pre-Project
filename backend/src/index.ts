@@ -61,7 +61,7 @@ async function replyToUser(replyToken: string, message: string) {
         "Content-Type": "application/json",
       },
     });
-    console.log("✅ ส่งค่า \n" , message , ")\n ส่งผ่าน Line แล้ว");
+    console.log("✅ ส่งค่า \n", message, ")\n ส่งผ่าน Line แล้ว");
     console.log("✅ ตอบกลับผู้ใช้แล้ว");
   } catch (err: any) {
     console.error("❌ LINE reply error:", err?.response?.data || err?.message);
@@ -218,20 +218,70 @@ setInterval(async () => {
 ${aiAnswer}`;
 
   try {
-    await axios.post("https://api.line.me/v2/bot/message/push", {
-      to: LINE_GROUP_ID,
-      messages: [{ type: "text", text: message }],
-    }, {
-      headers: {
-        Authorization: `Bearer ${LINE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-    });
-    console.log("✅ ส่งรายงานอัตโนมัติแล้ว");
+    // ดึง userId ทั้งหมดจากฐานข้อมูล
+    const users = await prisma.user.findMany();
+
+    for (const user of users) {
+      await axios.post("https://api.line.me/v2/bot/message/push", {
+        to: user.userId,
+        messages: [{ type: "text", text: message }],
+      }, {
+        headers: {
+          Authorization: `Bearer ${LINE_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+      console.log(`✅ ส่งถึง ${user.userId} แล้ว`);
+    }
   } catch (err: any) {
     console.error("❌ ส่งรายงานล้มเหลว:", err?.response?.data || err?.message);
   }
+
 }, 10 * 60 * 1000); // ทุก 10 นาที
+
+// ===== ถาม AI จาก frontend =====
+app.post("/ask-ai", async (req: Request, res: Response): Promise<void> => {
+  const { question } = req.body;
+
+  if (!question || !lastSensorData) {
+    res.status(400).json({ error: "❌ คำถามหรือข้อมูลเซ็นเซอร์ไม่พร้อม" });
+    return
+  }
+
+  const { light, temp, humidity } = lastSensorData;
+
+  const systemPrompt = `คุณเป็นผู้ช่วยวิเคราะห์สภาพอากาศจากเซ็นเซอร์`;
+  const userPrompt = `
+ข้อมูลเซ็นเซอร์:
+- ค่าแสง: ${light} lux
+- อุณหภูมิ: ${temp} °C
+- ความชื้น: ${humidity} %
+คำถาม: "${question}"
+ตอบสั้น ๆ ชัดเจน เป็นภาษาไทย`;
+
+  try {
+    const aiRes = await axios.post("https://api.openai.com/v1/chat/completions", {
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.7,
+    }, {
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const aiAnswer = aiRes.data?.choices?.[0]?.message?.content || "❌ ไม่มีคำตอบจาก AI";
+    res.json({ answer: aiAnswer });
+  } catch (err: any) {
+    console.error("❌ AI error (/ask-ai):", err?.response?.data || err?.message);
+    res.status(500).json({ error: "❌ ขอคำตอบจาก AI ไม่สำเร็จ" });
+  }
+});
+
 
 // ===== Start Server =====
 app.listen(PORT, () => {
