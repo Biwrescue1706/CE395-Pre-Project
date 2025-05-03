@@ -1,134 +1,166 @@
-/* ตั้งค่าพื้นฐาน */
+/* ===== ฟอนต์และพื้นหลังหลัก ===== */
 body {
-  margin: 0;
-  padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #4caf50;
-  min-height: 100vh;
-  color: #333;
+  margin: 0;
+  padding: 0;
+  color: #222;
   text-align: center;
 }
 
-.container {
-  max-width: 700px;
-  margin: 30px auto;
-  padding: 40px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+/* ===== หัวข้อโปรเจกต์ ===== */
+.header {
+  background-color: #e8f5e9;
+  padding: 30px 20px;
+  border-radius: 0 0 20px 20px;
 }
-
-h1 {
+.header h1 {
   font-size: 2rem;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
-
-.update-time {
-  font-size: 1.2rem;
-  margin: 5px 0;
+.header h2 {
+  font-size: 1rem;
+  font-weight: normal;
   color: #555;
 }
 
-.status {
-  margin-top: 20px;
-}
-
-.status p {
-  font-size: 1.4rem;
-  margin: 15px 0;
+/* ===== วันและเวลา ===== */
+.datetime-box {
+  background-color: #ffffff;
   padding: 15px;
-  border-radius: 10px;
-  background: #f0f4f7;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
-}
-
-/* สีพื้นหลังตามแสง (Light) */
-.light-very-bright { background-color: #ffe066; }
-.light-bright { background-color: #fff7a1; }
-.light-cloudy { background-color: #d3d3d3; }
-.light-natural { background-color: #c6e2ff; }
-.light-office { background-color: #e6f7ff; }
-.light-room { background-color: #f7f7f7; }
-.light-dim { background-color: #dcdcdc; }
-.light-dark { background-color: #555555; color: #fff; }
-
-/* สีพื้นหลังตามอุณหภูมิ (Temp) */
-.temp-very-hot { background-color: #ff6b6b; }
-.temp-hot { background-color: #ffa07a; }
-.temp-warm { background-color: #ffd580; }
-.temp-cool { background-color: #b2ebf2; }
-.temp-very-cold { background-color: #81d4fa; }
-
-/* สีพื้นหลังตามความชื้น (Humidity) */
-.humidity-level-7 { background-color: #9be7ff; }
-.humidity-level-6 { background-color: #b3e5fc; }
-.humidity-level-5 { background-color: #cce7ff; }
-.humidity-level-4 { background-color: #e1f5fe; }
-.humidity-level-3 { background-color: #f0f9ff; }
-.humidity-level-2 { background-color: #f8fbff; }
-.humidity-level-1 { background-color: #ffffff; }
-
-/* ส่วนวิเคราะห์ AI (อัตโนมัติ) */
-.ai-analysis {
-  margin-top: 30px;
-  padding: 20px;
-  background-color: #f3f0ff;
+  margin: 20px auto;
+  max-width: 400px;
   border-radius: 16px;
-  border: 2px dashed #7c4dff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-size: 1.1rem;
+}
+.datetime-box p {
+  margin: 6px 0;
 }
 
-.ai-analysis h2 {
-  margin-bottom: 10px;
-  color: #7c4dff;
+/* ===== กล่องแสดงค่าจากเซ็นเซอร์ ===== */
+.sensor-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+  margin: 30px auto;
 }
-
-#ai-suggestion {
-  font-size: 1.3rem;
-  font-weight: bold;
+.sensor-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 260px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.sensor-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+.sensor-card h2 {
+  font-size: 1.4rem;
+  color: #2e7d32;
+}
+.sensor-card p {
+  font-size: 2.2rem;
+  margin: 8px 0 4px;
+  color: #000;
+}
+.sensor-card small {
+  color: #888;
+}
+.status-text {
+  font-size: 1rem;
+  margin-top: 8px;
   color: #333;
 }
 
-/* ส่วนถาม AI */
-.ai-chat {
-  margin-top: 30px;
-  padding: 20px;
+/* ===== สีพื้นหลังตามสถานะ ===== */
+.light-very-bright { background-color: #ffe066; }
+.light-bright       { background-color: #fff7a1; }
+.light-cloudy       { background-color: #d3d3d3; }
+.light-natural      { background-color: #c6e2ff; }
+.light-office       { background-color: #e6f7ff; }
+.light-room         { background-color: #f7f7f7; }
+.light-dim          { background-color: #dcdcdc; }
+.light-dark         { background-color: #555555; color: #fff; }
+
+.temp-very-hot      { background-color: #ff6b6b; }
+.temp-hot           { background-color: #ffa07a; }
+.temp-warm          { background-color: #ffd580; }
+.temp-cool          { background-color: #b2ebf2; }
+.temp-very-cold     { background-color: #81d4fa; }
+
+.humidity-level-7   { background-color: #9be7ff; }
+.humidity-level-6   { background-color: #b3e5fc; }
+.humidity-level-5   { background-color: #cce7ff; }
+.humidity-level-4   { background-color: #e1f5fe; }
+.humidity-level-3   { background-color: #f0f9ff; }
+.humidity-level-2   { background-color: #f8fbff; }
+.humidity-level-1   { background-color: #ffffff; }
+
+/* ===== AI Chat ===== */
+.ai-box {
   background-color: #e0f7fa;
+  margin: 40px auto;
+  padding: 30px 20px;
   border-radius: 16px;
-  border: 2px dashed #00acc1;
+  max-width: 600px;
 }
-
-.ai-chat h2 {
-  margin-bottom: 10px;
-  color: #00838f;
+.ai-box h2 {
+  color: #00796b;
+  margin-bottom: 20px;
 }
-
-#user-question {
-  width: 80%;
-  padding: 12px;
-  font-size: 1rem;
+.ai-form {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ai-form input {
+  width: 65%;
+  padding: 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
-  margin-bottom: 10px;
-}
-
-button {
-  padding: 10px 20px;
   font-size: 1rem;
+}
+.ai-form button {
   background-color: #00acc1;
   color: white;
   border: none;
   border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s;
 }
-
-button:hover {
-  background-color: #00838f;
+.ai-form button:hover {
+  background-color: #008ba3;
 }
-
 #ai-answer {
-  margin-top: 10px;
+  margin-top: 15px;
   font-size: 1.2rem;
   font-weight: bold;
   color: #333;
+}
+
+/* ===== Responsive Layout ===== */
+@media (max-width: 768px) {
+  .sensor-wrapper {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .sensor-card {
+    width: 90%;
+  }
+
+  .ai-form {
+    flex-direction: column;
+  }
+
+  .ai-form input,
+  .ai-form button {
+    width: 100%;
+  }
 }

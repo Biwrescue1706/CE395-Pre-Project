@@ -118,7 +118,7 @@ async function checkAndSendAlert() {
         lastAlertTime = currentTime;
     }
 }
-setInterval(checkAndSendAlert, 60 * 1000); // ตรวจสอบทุก 1 นาที
+// setInterval(checkAndSendAlert, 60 * 1000); // ตรวจสอบทุก 1 นาที
 
 // ✅ [POST] รับข้อมูลจาก ESP32
 app.post("/sensor-data", (req: Request, res: Response) => {

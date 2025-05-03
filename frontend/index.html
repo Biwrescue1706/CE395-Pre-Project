@@ -1,40 +1,60 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ระบบสภาพอากาศ IoT</title>
+  <title>ระบบพยากรณ์อากาศอัจฉริยะ ด้วย AI และ IoT</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <div class="container">
-    <h1>🌤☀️🔥 ระบบสภาพอากาศ IoT ☀️</h1>
 
-    <p class="update-time"><span>📅 วันล่าสุด : </span><span id="datestamp">--</span></p>
-    <p class="update-time"><span>⏰ เวลาล่าสุด : </span><span id="timestamp">--</span></p>
+  <!-- หัวข้อโปรเจกต์ -->
+  <section class="section header">
+    <h1>ระบบพยากรณ์อากาศอัจฉริยะ ด้วย AI และ IoT</h1>
+    <h2>ตรวจสอบและวิเคราะห์สภาพอากาศแบบเรียลไทม์ พร้อมแจ้งเตือนผ่าน LINE</h2>
+  </section>
 
-    <div class="status">
-      <p id="light-box">
-        💡☀️🔥 แสง : <span id="light">--</span> lux<br />
-        (<span id="light-status">--</span>)
-      </p>
-      <p id="temp-box">
-        🌡️☀️🔥 อุณหภูมิ : <span id="temp">--</span> °C<br />
-        (<span id="temp-status">--</span>)
-      </p>
-      <p id="humidity-box">
-        💧 ความชื้น : <span id="humidity">--</span> %<br />
-        (<span id="humidity-status">--</span>)
-      </p>
+  <!-- วันและเวลา -->
+  <section class="section datetime-box">
+    <p><span>📅 วันล่าสุด: </span> <span id="datestamp">--</span></p>
+    <p><span>⌚ เวลาล่าสุด: </span><span id="timestamp">--</span></p>
+  </section>
+
+  <!-- ค่าจากเซ็นเซอร์ -->
+  <section class="sensor-wrapper">
+    <div class="sensor-card">
+      <h2>💡 แสง</h2>
+      <p id="light">--</p>
+      <small>lux</small>
+      <p id="light-status" class="status-text">--</p>
     </div>
+    <div class="sensor-card">
+      <h2>🌡️ อุณหภูมิ</h2>
+      <p id="temp">--</p>
+      <small>°C</small>
+      <p id="temp-status" class="status-text">--</p>
+    </div>
+    <div class="sensor-card">
+      <h2>💧 ความชื้น</h2>
+      <p id="humidity">--</p>
+      <small>%</small>
+      <p id="humidity-status" class="status-text">--</p>
+    </div>
+  </section>
 
-    <div class="ai-chat">
-      <h2>💬 ถาม AI เกี่ยวกับสภาพอากาศ</h2>
-      <input type="text" id="user-question" placeholder="พิมพ์คำถามเช่น 'ควรพกร่มไหม'" />
+  <!-- ถาม AI -->
+  <section class="section ai-box">
+    <h2>💬 ถาม AI เกี่ยวกับสภาพอากาศ</h2>
+    <div class="ai-form">
+      <input type="text" id="user-question" placeholder="เช่น ควรตากผ้าไหมวันนี้?" />
       <button onclick="askAI()">ถาม AI</button>
-      <p id="ai-answer">--</p>
-    </div>    
+    </div>
+    <p id="ai-answer">--</p>
+  </section>
 
   <script src="script.js"></script>
 </body>
+
 </html>

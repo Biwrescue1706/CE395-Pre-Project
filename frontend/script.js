@@ -124,7 +124,7 @@ function applyStatusColor(id, className) {
 async function askAI() {
   const question = document.getElementById("user-question").value.trim();
   if (!question) {
-    document.getElementById("ai-answer").textContent = "⚠️ กรุณาพิมพ์คำถามก่อนนะคะ";
+    document.getElementById("ai-answer").textContent = "⚠️ กรุณาพิมพ์คำถามก่อนนะครับ";
     return;
   }
 
