@@ -141,7 +141,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
 
     // ถ้าไม่ใช่ข้อความ
 
-    if (messageType !== "text" || (!text )) {
+    if (messageType !== "text" || (!text)) {
       const msg = `📊 สภาพอากาศล่าสุด:
     - ค่าแสง: ${light} lux (${lightStatus})
     - อุณหภูมิ: ${temp} °C (${tempStatus})
@@ -268,12 +268,15 @@ app.get("/", async (req: Request, res: Response) => {
   try {
     const sensor = await axios.get("https://ce395backend.loca.lt/latest");
     const { light, temp, humidity } = sensor.data;
+    const lightStatus = getLightStatus(light);
+    const tempStatus = getTempStatus(temp);
+    const humidityStatus = getHumidityStatus(humidity);
 
     res.send(`
       ✅ Hello World!<br>
-      💡 ค่าแสง: ${light} lux<br>
-      🌡 อุณหภูมิ: ${temp} °C<br>
-      💧 ความชื้น: ${humidity} %
+      💡 ค่าแสง: ${light} lux ( ${lightStatus} ) <br>
+      🌡 อุณหภูมิ: ${temp} °C ( ${tempStatus} ) <br>
+      💧 ความชื้น: ${humidity} % ( ${humidityStatus} )
     `);
   } catch (err: any) {
     res.send(`
