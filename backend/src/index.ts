@@ -143,18 +143,18 @@ app.post("/webhook", async (req: Request, res: Response) => {
 
     if (messageType !== "text" || (!text)) {
       const msg = `📊 สภาพอากาศล่าสุด:
-    - ค่าแสง: ${light} lux (${lightStatus})
-    - อุณหภูมิ: ${temp} °C (${tempStatus})
-    - ความชื้น: ${humidity} % (${humidityStatus})`;
+- ค่าแสง: ${light} lux (${lightStatus})
+- อุณหภูมิ: ${temp} °C (${tempStatus})
+- ความชื้น: ${humidity} % (${humidityStatus})`;
       await replyToUser(replyToken, msg);
       continue;
     }
 
     if (messageType === "text" || (text && text.includes("สวัสดี"))) {
       const msg = `📊 สภาพอากาศล่าสุด:
-    - ค่าแสง: ${light} lux (${lightStatus})
-    - อุณหภูมิ: ${temp} °C (${tempStatus})
-    - ความชื้น: ${humidity} % (${humidityStatus})`;
+- ค่าแสง: ${light} lux (${lightStatus})
+- อุณหภูมิ: ${temp} °C (${tempStatus})
+- ความชื้น: ${humidity} % (${humidityStatus})`;
       await replyToUser(replyToken, msg);
       continue;
     }
