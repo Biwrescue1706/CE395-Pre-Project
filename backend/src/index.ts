@@ -8,7 +8,7 @@ import { PrismaClient } from "@prisma/client";
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN || "";
 // const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
