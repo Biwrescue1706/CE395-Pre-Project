@@ -11,13 +11,16 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN || "";
-const LINE_GROUP_ID = process.env.LINE_GROUP_ID || "";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 
 app.use(cors());
 app.use(bodyParser.json());
 
-let lastSensorData: { light: number; temp: number; humidity: number } | null = null;
+let lastSensorData: {
+  light: number;
+  temp: number;
+  humidity: number
+} | null = null;
 
 // ===== Helper =====
 function getLightStatus(light: number): string {
@@ -38,7 +41,6 @@ function getTempStatus(temp: number): string {
   if (temp >= 20) return "อุณหภูมิพอดี 🌤";
   return "อุณหูมิเย็น ❄️";
 }
-
 function getHumidityStatus(humidity: number): string {
   if (humidity > 85) return "ชื้นมาก อากาศอึดอัด 🌧️";
   if (humidity > 70) return "อากาศชื้น เหนียวตัว 💦";
@@ -80,15 +82,25 @@ app.post("/webhook", async (req: Request, res: Response) => {
 
     if (!userId || !replyToken) continue;
 
-    // Save userId
-    await prisma.user.upsert({
+    // // Save userId
+    // await prisma.user.upsert({
+    //   where: { userId },
+    //   update: {},
+    //   create: { userId },
+    // });
+
+    const existingUser = await prisma.user.findUnique({
       where: { userId },
-      update: {},
-      create: { userId },
     });
 
+    if (existingUser) {
+      console.log(`ℹ️    มี userId นี้แล้ว: ${userId}`);
+    } else {
+      await prisma.user.create({ data: { userId } });
+      console.log(`✅ เก็บ userId ใหม่: ${userId}`);
+    }
+
     if (!lastSensorData) {
-      await replyToUser(replyToken, "❌ ยังไม่มีข้อมูลเซ็นเซอร์");
       continue;
     }
 
@@ -279,6 +291,24 @@ app.post("/ask-ai", async (req: Request, res: Response): Promise<void> => {
   } catch (err: any) {
     console.error("❌ AI error (/ask-ai):", err?.response?.data || err?.message);
     res.status(500).json({ error: "❌ ขอคำตอบจาก AI ไม่สำเร็จ" });
+  }
+});
+
+app.get("/", async (req: Request, res: Response) => {
+  try {
+    const sensor = await axios.get("https://ce395backend.loca.lt/latest");
+    const { light, temp, humidity } = sensor.data;
+
+    res.send(`
+      ✅ Hello World!<br>
+      💡 ค่าแสง: ${light} lux<br>
+      🌡 อุณหภูมิ: ${temp} °C<br>
+      💧 ความชื้น: ${humidity} %
+    `);
+  } catch (err: any) {
+    res.send(`
+      ✅ Hello World!
+    `);
   }
 });
 
