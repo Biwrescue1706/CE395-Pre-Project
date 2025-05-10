@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npx live-server .",
-    "tunnel": "localtunnel --port 8080 --subdomain ce395frontend",
+    "tunnel": "lt --port 8080 --subdomain ce395frontend",
     "start": "concurrently \"npm run dev\" \"npm run tunnel\""
   },
   "keywords": [],
@@ -12,7 +12,8 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "live-server": "^1.2.2",
-    "concurrently": "^8.2.0"
+    "localtunnel": "^2.0.2"
   }
 }

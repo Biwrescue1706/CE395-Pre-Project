@@ -106,8 +106,9 @@ app.post("/webhook", async (req: Request, res: Response) => {
   for (const event of events) {
     const userId = event?.source?.userId;
     const replyToken = event?.replyToken;
+    const rawText = event?.message?.text || "";
+    const text = rawText.trim();
     const messageType = event?.message?.type;
-    const text = event?.message?.text?.trim();
 
     console.log("✅ รับข้อมูลจาก Line\n", {
       userId,
@@ -115,22 +116,21 @@ app.post("/webhook", async (req: Request, res: Response) => {
       text,
     });
 
+    if (!userId || !replyToken) {
+      console.warn("❌ userId หรือ replyToken หาย");
+      continue;
+    }
 
-    if (!userId || !replyToken || !lastSensorData) continue;
-
-    const existingUser = await prisma.user.findUnique({
-      where: { userId },
-    });
-
-    if (existingUser) {
-      console.log(`ℹ️    มี userId นี้แล้ว: ${userId}`);
-    } else {
+    // บันทึก userId ลง DB ถ้ายังไม่มี
+    const existingUser = await prisma.user.findUnique({ where: { userId } });
+    if (!existingUser) {
       await prisma.user.create({ data: { userId } });
       console.log(`✅ เก็บ userId ใหม่: ${userId}`);
     }
 
+    // ยังไม่มีข้อมูลเซ็นเซอร์
     if (!lastSensorData) {
-      await replyToUser(replyToken, "❌ ไม่มีข้อมูลเซ็นเซอร์");
+      await replyToUser(replyToken, "❌ ยังไม่มีข้อมูลจากเซ็นเซอร์");
       continue;
     }
 
@@ -139,69 +139,70 @@ app.post("/webhook", async (req: Request, res: Response) => {
     const tempStatus = getTempStatus(temp);
     const humidityStatus = getHumidityStatus(humidity);
 
-    // ถ้าไม่ใช่ข้อความ
-
-    if (messageType !== "text" || (!text)) {
-      const msg = `📊 สภาพอากาศล่าสุด:
-- ค่าแสง: ${light} lux (${lightStatus})
-- อุณหภูมิ: ${temp} °C (${tempStatus})
-- ความชื้น: ${humidity} % (${humidityStatus})`;
+    // ไม่ใช่ข้อความ
+    if (messageType !== "text") {
+      const msg = `📊 สภาพอากาศล่าสุด :
+💡 ค่าแสง: ${light} lux (${lightStatus})
+🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
+💧 ความชื้น: ${humidity} % (${humidityStatus})`;
       await replyToUser(replyToken, msg);
       continue;
     }
 
-    if (text && text.includes("สวัสดี")) {
-      const msg = `📊 สภาพอากาศล่าสุด:
-- ค่าแสง: ${light} lux (${lightStatus})
-- อุณหภูมิ: ${temp} °C (${tempStatus})
-- ความชื้น: ${humidity} % (${humidityStatus})`;
+    // คำทักทายพิเศษ
+    if (text.includes("สวัสดี")) {
+      const msg = `📊 สภาพอากาศล่าสุด :
+💡 ค่าแสง: ${light} lux (${lightStatus})
+🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
+💧 ความชื้น: ${humidity} % (${humidityStatus})`;
       await replyToUser(replyToken, msg);
       continue;
     }
 
-    const aiAnswer = await askOllama(text, light, temp, humidity);
-
+    console.log("🎯 switch case text:", text);
     let replyText = "";
+
     switch (text) {
       case "สภาพอากาศตอนนี้เป็นอย่างไร":
-        replyText = `
-        📊 สภาพอากาศล่าสุด:\n
-        - ค่าแสง: ${light} lux (${lightStatus})\n
-        - อุณหภูมิ: ${temp} °C (${tempStatus})\n
-        - ความชื้น: ${humidity} % (${humidityStatus})\n
-        🤖 คำตอบจาก AI: ${aiAnswer}`;
+        replyText = `📊 สภาพอากาศล่าสุด :
+💡 ค่าแสง: ${light} lux (${lightStatus})
+🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
+💧 ความชื้น: ${humidity} % (${humidityStatus})
+🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
         break;
-      case "ควรตากผ้าไหม":
-        replyText = `
-        ควรตากผ้าไหม:\n
-        - ค่าแสง: ${light} lux (${lightStatus})\n
-        🤖 คำตอบจาก AI:\n${aiAnswer}`;
+
+      case "ตอนนี้ควรตากผ้าไหม":
+        replyText = `📌 ตอนนี้ควรตากผ้าไหม :
+💡 ค่าแสง: ${light} lux (${lightStatus})
+🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
         break;
+
       case "ควรพกร่มออกจากบ้านไหม":
-        replyText = `ควรพกร่มไหม:\n🤖 คำตอบจาก AI:\n${aiAnswer}`;
+        replyText = `📌 ควรพกร่มออกจากบ้านไหม :
+🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
         break;
-      case "ความเข้มของแสงเป็นอย่างไร":
-        replyText = `
-        📊 ความเข้มของแสง:\n
-        - ค่าแสง: ${light} lux (${lightStatus})\n
-        🤖 คำตอบจาก AI: ${aiAnswer}`;
+
+      case "ความเข้มของแสงตอนนี้เป็นอย่างไร":
+        replyText = `📊 ความเข้มของแสงตอนนี้ :
+💡 ค่าแสง: ${light} lux (${lightStatus})
+🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
         break;
+
       case "ความชื้นตอนนี้เป็นอย่างไร":
-        replyText = `
-        📊 ความชื้นล่าสุด:\n
-        - ความชื้น: ${humidity} % (${humidityStatus})\n
-        🤖 คำตอบจาก AI: ${aiAnswer}`;
+        replyText = `📊 ความชื้นตอนนี้ :
+💧 ความชื้น: ${humidity} % (${humidityStatus})
+🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
         break;
-      case "เข้าสู่เว็บไซต์":
-        replyText = `🌐 คลิกที่นี่เพื่อเข้าสู่เว็บไซต์:\nhttp://127.0.0.1:5500/frontend/`;
-        break;
+
       default:
-        replyText = aiAnswer;
+        replyText = await askOllama(text, light, temp, humidity);
         break;
     }
-    // ✅ ส่งกลับ Line
+
+    console.log("📤 ส่งข้อความกลับไปที่ Line:", replyText);
     await replyToUser(replyToken, replyText);
   }
+
   res.sendStatus(200);
 });
 
@@ -234,12 +235,11 @@ setInterval(async () => {
   const humidityStatus = getHumidityStatus(humidity);
   const aiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity);
 
-  const message = `📡 รายงานอัตโนมัติ:
-- ค่าแสง: ${light} lux (${lightStatus})
-- อุณหภูมิ: ${temp} °C (${tempStatus})
-- ความชื้น: ${humidity} % (${humidityStatus})
-🤖 AI:
-${aiAnswer}`;
+  const message = `📡 รายงานอัตโนมัติ :
+💡 ค่าแสง: ${light} lux (${lightStatus})
+🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
+💧 ความชื้น: ${humidity} % (${humidityStatus})
+🤖 AI: ${aiAnswer}`;
 
   const users = await prisma.user.findMany();
   for (const u of users) {

@@ -8,7 +8,7 @@
 .ai-box {
   background-color: #e0f7fa;
   margin: 40px auto;
-  padding: 30px 20px;
+  padding: 40px 20px;
   border-radius: 16px;
   max-width: 600px;
 }
@@ -22,6 +22,7 @@
   display: flex;
   justify-content: center;
   gap: 10px;
+  padding: auto;
   flex-wrap: wrap;
 }
 
@@ -55,7 +56,7 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #4caf50;
   margin: 0;
-  padding: 0;
+  padding: 20px;
   color: #222;
   text-align: center;
 }
@@ -167,7 +168,7 @@ body {
   background-color: #ffffff;
   border-radius: 16px;
   padding: 24px;
-  width: 260px;
+  width: 200px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
