@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx live-server"
+    "dev": "npx live-server .",
+    "tunnel": "localtunnel --port 8080 --subdomain ce395frontend",
+    "start": "concurrently \"npm run dev\" \"npm run tunnel\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
-  "dependencies": {
-    "nodemon": "^3.1.10"
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "concurrently": "^8.2.0"
   }
 }

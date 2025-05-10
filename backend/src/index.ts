@@ -150,7 +150,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
       continue;
     }
 
-    if (messageType === "text" || (text && text.includes("สวัสดี"))) {
+    if (text && text.includes("สวัสดี")) {
       const msg = `📊 สภาพอากาศล่าสุด:
 - ค่าแสง: ${light} lux (${lightStatus})
 - อุณหภูมิ: ${temp} °C (${tempStatus})
@@ -192,11 +192,15 @@ app.post("/webhook", async (req: Request, res: Response) => {
         - ความชื้น: ${humidity} % (${humidityStatus})\n
         🤖 คำตอบจาก AI: ${aiAnswer}`;
         break;
+      case "เข้าสู่เว็บไซต์":
+        replyText = `🌐 คลิกที่นี่เพื่อเข้าสู่เว็บไซต์:\nhttp://127.0.0.1:5500/frontend/`;
+        break;
       default:
         replyText = aiAnswer;
         break;
     }
-
+    // ✅ ส่งกลับ Line
+    await replyToUser(replyToken, replyText);
   }
   res.sendStatus(200);
 });
