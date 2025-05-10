@@ -8,10 +8,10 @@ import { PrismaClient } from "@prisma/client";
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN || "";
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+// const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -21,8 +21,6 @@ let lastSensorData: {
   temp: number;
   humidity: number
 } | null = null;
-
-let webhookLogs: string[] = [];
 
 // ===== Helper =====
 function getLightStatus(light: number): string {
@@ -65,10 +63,39 @@ async function replyToUser(replyToken: string, message: string) {
         "Content-Type": "application/json",
       },
     });
-    console.log("✅ ส่งค่า \n", message, ")\n ส่งผ่าน Line แล้ว");
-    console.log("✅ ตอบกลับผู้ใช้แล้ว");
+    console.log("✅ ส่งผ่าน Line แล้ว");
   } catch (err: any) {
     console.error("❌ LINE reply error:", err?.response?.data || err?.message);
+  }
+}
+
+// ====== Ollama AI ======
+async function askOllama(question: string,
+  light: number,
+  temp: number,
+  humidity: number): Promise<string> {
+  const systemPrompt = "คุณเป็นผู้ช่วยวิเคราะห์สภาพอากาศจากเซ็นเซอร์";
+  const userPrompt = `
+ข้อมูลเซ็นเซอร์:
+- ค่าแสง: ${light} lux
+- อุณหภูมิ: ${temp} °C
+- ความชื้น: ${humidity} %
+คำถาม: "${question}"
+ตอบสั้น ๆ ชัดเจน เป็นภาษาไทย`;
+
+  try {
+    const response = await axios.post("http://localhost:11434/api/chat", {
+      model: "llama3:70b-instruct-q3_K_S",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      stream: false,
+    });
+    return response.data?.message?.content || "❌ ไม่สามารถตอบคำถามได้";
+  } catch (err) {
+    console.error("❌ Ollama error:", err);
+    return "❌ เกิดข้อผิดพลาดในการติดต่อ AI";
   }
 }
 
@@ -82,20 +109,14 @@ app.post("/webhook", async (req: Request, res: Response) => {
     const messageType = event?.message?.type;
     const text = event?.message?.text?.trim();
 
-    if (!userId || !replyToken) continue;
+    console.log("✅ รับข้อมูลจาก Line\n", {
+      userId,
+      messageType,
+      text,
+    });
 
-    // // Save userId
-    // await prisma.user.upsert({
-    //   where: { userId },
-    //   update: {},
-    //   create: { userId },
-    // });
 
-    // === log ===
-    const log = `🟢 [${new Date().toLocaleTimeString()}] userId: ${userId}, type: ${messageType}, text: ${text || "ไม่มีข้อความ"}`;
-    console.log(log);
-    webhookLogs.push(log);
-    if (webhookLogs.length > 50) webhookLogs.shift();
+    if (!userId || !replyToken || !lastSensorData) continue;
 
     const existingUser = await prisma.user.findUnique({
       where: { userId },
@@ -108,7 +129,10 @@ app.post("/webhook", async (req: Request, res: Response) => {
       console.log(`✅ เก็บ userId ใหม่: ${userId}`);
     }
 
-    if (!lastSensorData) continue;
+    if (!lastSensorData) {
+      await replyToUser(replyToken, "❌ ไม่มีข้อมูลเซ็นเซอร์");
+      continue;
+    }
 
     const { light, temp, humidity } = lastSensorData;
     const lightStatus = getLightStatus(light);
@@ -116,7 +140,8 @@ app.post("/webhook", async (req: Request, res: Response) => {
     const humidityStatus = getHumidityStatus(humidity);
 
     // ถ้าไม่ใช่ข้อความ
-    if (messageType !== "text" || text.includes("สวัสดี")) {
+
+    if (messageType !== "text" || (!text )) {
       const msg = `📊 สภาพอากาศล่าสุด:
     - ค่าแสง: ${light} lux (${lightStatus})
     - อุณหภูมิ: ${temp} °C (${tempStatus})
@@ -125,51 +150,58 @@ app.post("/webhook", async (req: Request, res: Response) => {
       continue;
     }
 
-    // ถาม AI
-    const systemPrompt = `คุณเป็นผู้ช่วยวิเคราะห์สภาพอากาศจากเซ็นเซอร์`;
-    const userPrompt = `
-ข้อมูลเซ็นเซอร์:
-- ค่าแสง: ${light} lux
-- อุณหภูมิ: ${temp} °C
-- ความชื้น: ${humidity} %
-คำถาม: "${text}"
-ตอบสั้น ๆ ชัดเจน เป็นภาษาไทย`;
-
-    let aiAnswer = "❌ ไม่สามารถวิเคราะห์ได้";
-    try {
-      const aiRes = await axios.post("https://api.openai.com/v1/chat/completions", {
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.7,
-      }, {
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      aiAnswer = aiRes.data?.choices?.[0]?.message?.content || aiAnswer;
-    } catch (err: any) {
-      console.error("❌ AI error:", err?.response?.data || err?.message);
+    if (messageType === "text" || (text && text.includes("สวัสดี"))) {
+      const msg = `📊 สภาพอากาศล่าสุด:
+    - ค่าแสง: ${light} lux (${lightStatus})
+    - อุณหภูมิ: ${temp} °C (${tempStatus})
+    - ความชื้น: ${humidity} % (${humidityStatus})`;
+      await replyToUser(replyToken, msg);
+      continue;
     }
 
-    const replyText = `📊 สภาพอากาศล่าสุด:
-- ค่าแสง: ${light} lux (${lightStatus})
-- อุณหภูมิ: ${temp} °C (${tempStatus})
-- ความชื้น: ${humidity} % (${humidityStatus})
-🤖 คำตอบจาก AI:
-${aiAnswer}`;
+    const aiAnswer = await askOllama(text, light, temp, humidity);
 
-    await replyToUser(replyToken, replyText);
+    let replyText = "";
+    switch (text) {
+      case "สภาพอากาศตอนนี้เป็นอย่างไร":
+        replyText = `
+        📊 สภาพอากาศล่าสุด:\n
+        - ค่าแสง: ${light} lux (${lightStatus})\n
+        - อุณหภูมิ: ${temp} °C (${tempStatus})\n
+        - ความชื้น: ${humidity} % (${humidityStatus})\n
+        🤖 คำตอบจาก AI: ${aiAnswer}`;
+        break;
+      case "ควรตากผ้าไหม":
+        replyText = `
+        ควรตากผ้าไหม:\n
+        - ค่าแสง: ${light} lux (${lightStatus})\n
+        🤖 คำตอบจาก AI:\n${aiAnswer}`;
+        break;
+      case "ควรพกร่มออกจากบ้านไหม":
+        replyText = `ควรพกร่มไหม:\n🤖 คำตอบจาก AI:\n${aiAnswer}`;
+        break;
+      case "ความเข้มของแสงเป็นอย่างไร":
+        replyText = `
+        📊 ความเข้มของแสง:\n
+        - ค่าแสง: ${light} lux (${lightStatus})\n
+        🤖 คำตอบจาก AI: ${aiAnswer}`;
+        break;
+      case "ความชื้นตอนนี้เป็นอย่างไร":
+        replyText = `
+        📊 ความชื้นล่าสุด:\n
+        - ความชื้น: ${humidity} % (${humidityStatus})\n
+        🤖 คำตอบจาก AI: ${aiAnswer}`;
+        break;
+      default:
+        replyText = aiAnswer;
+        break;
+    }
+
   }
-
   res.sendStatus(200);
 });
 
-// ===== ESP32 Sensor Data =====
+// ===== ESP32 หรือ ESP8266 Sensor Data =====
 app.post("/sensor-data", (req: Request, res: Response) => {
   const { light, temp, humidity } = req.body;
   if (light !== undefined && temp !== undefined && humidity !== undefined) {
@@ -189,115 +221,47 @@ app.get("/latest", (req: Request, res: Response) => {
   }
 });
 
-// ===== Auto Report Every 10 mins =====
+// === รายงานอัตโนมัติทุก 10 นาที
 setInterval(async () => {
   if (!lastSensorData) return;
-
   const { light, temp, humidity } = lastSensorData;
   const lightStatus = getLightStatus(light);
   const tempStatus = getTempStatus(temp);
   const humidityStatus = getHumidityStatus(humidity);
+  const aiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity);
 
-  const systemPrompt = `คุณเป็นผู้ช่วยวิเคราะห์สภาพอากาศจากเซ็นเซอร์`;
-  const userPrompt = `
-ข้อมูลเซ็นเซอร์:
-- ค่าแสง: ${light} lux
-- อุณหภูมิ: ${temp} °C
-- ความชื้น: ${humidity} %
-คำถาม: "วิเคราะห์สภาพอากาศขณะนี้"
-ตอบสั้น ๆ ชัดเจน เป็นภาษาไทย`;
-
-  let aiAnswer = "❌ ไม่สามารถวิเคราะห์ได้";
-  try {
-    const aiRes = await axios.post("https://api.openai.com/v1/chat/completions", {
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.7,
-    }, {
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    aiAnswer = aiRes.data?.choices?.[0]?.message?.content || aiAnswer;
-  } catch (err: any) {
-    console.error("❌ AI error (auto report):", err?.response?.data || err?.message);
-  }
-
-  const message = `📡 รายงานอัตโนมัติทุก 10 นาที:
+  const message = `📡 รายงานอัตโนมัติ:
 - ค่าแสง: ${light} lux (${lightStatus})
 - อุณหภูมิ: ${temp} °C (${tempStatus})
 - ความชื้น: ${humidity} % (${humidityStatus})
-🤖 คำตอบจาก AI:
+🤖 AI:
 ${aiAnswer}`;
 
-  try {
-    // ดึง userId ทั้งหมดจากฐานข้อมูล
-    const users = await prisma.user.findMany();
-
-    for (const user of users) {
-      await axios.post("https://api.line.me/v2/bot/message/push", {
-        to: user.userId,
-        messages: [{ type: "text", text: message }],
-      }, {
-        headers: {
-          Authorization: `Bearer ${LINE_ACCESS_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      });
-      console.log(`✅ ส่งถึง ${user.userId} แล้ว`);
-    }
-  } catch (err: any) {
-    console.error("❌ ส่งรายงานล้มเหลว:", err?.response?.data || err?.message);
+  const users = await prisma.user.findMany();
+  for (const u of users) {
+    await axios.post("https://api.line.me/v2/bot/message/push", {
+      to: u.userId,
+      messages: [{ type: "text", text: message }],
+    }, {
+      headers: {
+        Authorization: `Bearer ${LINE_ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    });
   }
+}, 5 * 60 * 1000); // 5 นาที
 
-}, 10 * 60 * 1000); // ทุก 10 นาที
-
-// ===== ถาม AI จาก frontend =====
+// === API: ถาม AI จาก frontend
 app.post("/ask-ai", async (req: Request, res: Response): Promise<void> => {
   const { question } = req.body;
-
   if (!question || !lastSensorData) {
-    res.status(400).json({ error: "❌ คำถามหรือข้อมูลเซ็นเซอร์ไม่พร้อม" });
+    res.status(400).json({ error: "❌ คำถามหรือข้อมูลไม่ครบ" });
     return
   }
 
   const { light, temp, humidity } = lastSensorData;
-
-  const systemPrompt = `คุณเป็นผู้ช่วยวิเคราะห์สภาพอากาศจากเซ็นเซอร์`;
-  const userPrompt = `
-ข้อมูลเซ็นเซอร์:
-- ค่าแสง: ${light} lux
-- อุณหภูมิ: ${temp} °C
-- ความชื้น: ${humidity} %
-คำถาม: "${question}"
-ตอบสั้น ๆ ชัดเจน เป็นภาษาไทย`;
-
-  try {
-    const aiRes = await axios.post("https://api.openai.com/v1/chat/completions", {
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.7,
-    }, {
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    const aiAnswer = aiRes.data?.choices?.[0]?.message?.content || "❌ ไม่มีคำตอบจาก AI";
-    res.json({ answer: aiAnswer });
-  } catch (err: any) {
-    console.error("❌ AI error (/ask-ai):", err?.response?.data || err?.message);
-    res.status(500).json({ error: "❌ ขอคำตอบจาก AI ไม่สำเร็จ" });
-  }
+  const answer = await askOllama(question, light, temp, humidity);
+  res.json({ answer });
 });
 
 app.get("/", async (req: Request, res: Response) => {
