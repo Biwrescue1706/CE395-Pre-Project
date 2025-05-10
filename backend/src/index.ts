@@ -1,5 +1,4 @@
 require("dotenv").config();
-
 import express, { Request, Response } from "express";
 import axios from "axios";
 import cors from "cors";
@@ -9,18 +8,12 @@ import { PrismaClient } from "@prisma/client";
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3002;
-
 const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN || "";
-// const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 
 app.use(cors());
 app.use(bodyParser.json());
 
-let lastSensorData: {
-  light: number;
-  temp: number;
-  humidity: number
-} | null = null;
+let lastSensorData: { light: number; temp: number; humidity: number } | null = null;
 
 // ===== Helper =====
 function getLightStatus(light: number): string {
@@ -33,7 +26,6 @@ function getLightStatus(light: number): string {
   if (light > 10) return "ไฟสลัว 🌑";
   return "มืดมากๆ 🕳️";
 }
-
 function getTempStatus(temp: number): string {
   if (temp > 35) return "อุณหภูมิร้อนมาก ⚠️";
   if (temp >= 30) return "อุณหภูมิร้อน 🔥";
@@ -70,10 +62,7 @@ async function replyToUser(replyToken: string, message: string) {
 }
 
 // ====== Ollama AI ======
-async function askOllama(question: string,
-  light: number,
-  temp: number,
-  humidity: number): Promise<string> {
+async function askOllama(question: string, light: number, temp: number, humidity: number): Promise<string> {
   const systemPrompt = "คุณเป็นผู้ช่วยวิเคราะห์สภาพอากาศจากเซ็นเซอร์";
   const userPrompt = `
 ข้อมูลเซ็นเซอร์:
@@ -85,7 +74,7 @@ async function askOllama(question: string,
 
   try {
     const response = await axios.post("http://localhost:11434/api/chat", {
-      model: "llama3:70b-instruct-q3_K_S",
+      model: "deepseek-r1:14b-qwen-distill-q4_K_M", // ✅ ใช้ Deepseek
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -106,20 +95,12 @@ app.post("/webhook", async (req: Request, res: Response) => {
   for (const event of events) {
     const userId = event?.source?.userId;
     const replyToken = event?.replyToken;
-    const rawText = event?.message?.text || "";
-    const text = rawText.trim();
+    const text = event?.message?.text?.trim() || "";
     const messageType = event?.message?.type;
 
-    console.log("✅ รับข้อมูลจาก Line\n", {
-      userId,
-      messageType,
-      text,
-    });
+    console.log("✅ รับข้อมูลจาก Line\n", { userId, messageType, text });
 
-    if (!userId || !replyToken) {
-      console.warn("❌ userId หรือ replyToken หาย");
-      continue;
-    }
+    if (!userId || !replyToken) continue;
 
     // บันทึก userId ลง DB ถ้ายังไม่มี
     const existingUser = await prisma.user.findUnique({ where: { userId } });
@@ -128,7 +109,6 @@ app.post("/webhook", async (req: Request, res: Response) => {
       console.log(`✅ เก็บ userId ใหม่: ${userId}`);
     }
 
-    // ยังไม่มีข้อมูลเซ็นเซอร์
     if (!lastSensorData) {
       await replyToUser(replyToken, "❌ ยังไม่มีข้อมูลจากเซ็นเซอร์");
       continue;
@@ -139,8 +119,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
     const tempStatus = getTempStatus(temp);
     const humidityStatus = getHumidityStatus(humidity);
 
-    // ไม่ใช่ข้อความ
-    if (messageType !== "text") {
+    if (messageType !== "text" || text.includes("สวัสดี")) {
       const msg = `📊 สภาพอากาศล่าสุด :
 💡 ค่าแสง: ${light} lux (${lightStatus})
 🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
@@ -149,19 +128,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
       continue;
     }
 
-    // คำทักทายพิเศษ
-    if (text.includes("สวัสดี")) {
-      const msg = `📊 สภาพอากาศล่าสุด :
-💡 ค่าแสง: ${light} lux (${lightStatus})
-🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
-💧 ความชื้น: ${humidity} % (${humidityStatus})`;
-      await replyToUser(replyToken, msg);
-      continue;
-    }
-
-    console.log("🎯 switch case text:", text);
     let replyText = "";
-
     switch (text) {
       case "สภาพอากาศตอนนี้เป็นอย่างไร":
         replyText = `📊 สภาพอากาศล่าสุด :
@@ -170,43 +137,37 @@ app.post("/webhook", async (req: Request, res: Response) => {
 💧 ความชื้น: ${humidity} % (${humidityStatus})
 🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
         break;
-
       case "ตอนนี้ควรตากผ้าไหม":
         replyText = `📌 ตอนนี้ควรตากผ้าไหม :
 💡 ค่าแสง: ${light} lux (${lightStatus})
 🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
         break;
-
       case "ควรพกร่มออกจากบ้านไหม":
         replyText = `📌 ควรพกร่มออกจากบ้านไหม :
 🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
         break;
-
       case "ความเข้มของแสงตอนนี้เป็นอย่างไร":
         replyText = `📊 ความเข้มของแสงตอนนี้ :
 💡 ค่าแสง: ${light} lux (${lightStatus})
 🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
         break;
-
       case "ความชื้นตอนนี้เป็นอย่างไร":
         replyText = `📊 ความชื้นตอนนี้ :
 💧 ความชื้น: ${humidity} % (${humidityStatus})
 🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
         break;
-
       default:
         replyText = await askOllama(text, light, temp, humidity);
         break;
     }
 
-    console.log("📤 ส่งข้อความกลับไปที่ Line:", replyText);
     await replyToUser(replyToken, replyText);
   }
 
   res.sendStatus(200);
 });
 
-// ===== ESP32 หรือ ESP8266 Sensor Data =====
+// ===== ESP8266/ESP32 Sensor Data
 app.post("/sensor-data", (req: Request, res: Response) => {
   const { light, temp, humidity } = req.body;
   if (light !== undefined && temp !== undefined && humidity !== undefined) {
@@ -217,7 +178,7 @@ app.post("/sensor-data", (req: Request, res: Response) => {
   }
 });
 
-// ===== Get Latest Sensor Data =====
+// ===== Get Latest Sensor Data
 app.get("/latest", (req: Request, res: Response) => {
   if (lastSensorData) {
     res.json(lastSensorData);
@@ -226,9 +187,22 @@ app.get("/latest", (req: Request, res: Response) => {
   }
 });
 
-// === รายงานอัตโนมัติทุก 10 นาที
+// ===== ถาม AI จาก frontend
+app.post("/ask-ai", async (req: Request, res: Response) => {
+  const { question } = req.body;
+  if (!question || !lastSensorData) {
+    res.status(400).json({ error: "❌ คำถามหรือข้อมูลไม่ครบ" });
+    return;
+  }
+  const { light, temp, humidity } = lastSensorData;
+  const answer = await askOllama(question, light, temp, humidity);
+  res.json({ answer });
+});
+
+// ===== รายงานอัตโนมัติทุก 5 นาที
 setInterval(async () => {
   if (!lastSensorData) return;
+
   const { light, temp, humidity } = lastSensorData;
   const lightStatus = getLightStatus(light);
   const tempStatus = getTempStatus(temp);
@@ -253,21 +227,9 @@ setInterval(async () => {
       },
     });
   }
-}, 5 * 60 * 1000); // 5 นาที
+}, 5 * 60 * 1000);
 
-// === API: ถาม AI จาก frontend
-app.post("/ask-ai", async (req: Request, res: Response): Promise<void> => {
-  const { question } = req.body;
-  if (!question || !lastSensorData) {
-    res.status(400).json({ error: "❌ คำถามหรือข้อมูลไม่ครบ" });
-    return
-  }
-
-  const { light, temp, humidity } = lastSensorData;
-  const answer = await askOllama(question, light, temp, humidity);
-  res.json({ answer });
-});
-
+// ===== Root route
 app.get("/", async (req: Request, res: Response) => {
   try {
     const sensor = await axios.get("https://ce395backend.loca.lt/latest");
@@ -275,22 +237,16 @@ app.get("/", async (req: Request, res: Response) => {
     const lightStatus = getLightStatus(light);
     const tempStatus = getTempStatus(temp);
     const humidityStatus = getHumidityStatus(humidity);
-
-    res.send(`
-      ✅ Hello World!<br>
-      💡 ค่าแสง: ${light} lux ( ${lightStatus} ) <br>
-      🌡 อุณหภูมิ: ${temp} °C ( ${tempStatus} ) <br>
-      💧 ความชื้น: ${humidity} % ( ${humidityStatus} )
-    `);
-  } catch (err: any) {
-    res.send(`
-      ✅ Hello World!
-    `);
+    res.send(`✅ Hello World!<br>
+💡 ค่าแสง: ${light} lux ( ${lightStatus} ) <br>
+🌡 อุณหภูมิ: ${temp} °C ( ${tempStatus} ) <br>
+💧 ความชื้น: ${humidity} % ( ${humidityStatus} )`);
+  } catch {
+    res.send(`✅ Hello World!`);
   }
 });
 
-
-// ===== Start Server =====
+// ===== Start Server
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
