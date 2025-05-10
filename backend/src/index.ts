@@ -22,6 +22,8 @@ let lastSensorData: {
   humidity: number
 } | null = null;
 
+let webhookLogs: string[] = [];
+
 // ===== Helper =====
 function getLightStatus(light: number): string {
   if (light > 50000) return "แดดจ้า ☀️";
@@ -89,6 +91,12 @@ app.post("/webhook", async (req: Request, res: Response) => {
     //   create: { userId },
     // });
 
+    // === log ===
+    const log = `🟢 [${new Date().toLocaleTimeString()}] userId: ${userId}, type: ${messageType}, text: ${text || "ไม่มีข้อความ"}`;
+    console.log(log);
+    webhookLogs.push(log);
+    if (webhookLogs.length > 50) webhookLogs.shift();
+
     const existingUser = await prisma.user.findUnique({
       where: { userId },
     });
@@ -100,9 +108,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
       console.log(`✅ เก็บ userId ใหม่: ${userId}`);
     }
 
-    if (!lastSensorData) {
-      continue;
-    }
+    if (!lastSensorData) continue;
 
     const { light, temp, humidity } = lastSensorData;
     const lightStatus = getLightStatus(light);
