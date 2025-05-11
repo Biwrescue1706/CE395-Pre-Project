@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npx live-server .",
-    "tunnel": "lt --port 8080 --subdomain ce395frontend",
+    "tunnel": "cloudflared tunnel --url http://localhost:8080 --hostname ce395frontend",
     "start": "concurrently \"npm run dev\" \"npm run tunnel\""
   },
   "keywords": [],

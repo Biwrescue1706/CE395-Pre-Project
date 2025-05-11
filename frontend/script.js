@@ -1,4 +1,4 @@
-const BASE_URL = "https://ce395backend.loca.lt"; // เปลี่ยนเป็น URL จริงของ backend
+const BASE_URL = "https://api.biwbong.shop"; 
 const API_URL = `${BASE_URL}/latest`; // สำหรับโหลดข้อมูลเซ็นเซอร์
 const ASK_AI_URL = `${BASE_URL}/ask-ai`; // สำหรับถาม AI
 
@@ -103,5 +103,5 @@ function getThaiDateParts(date) {
 // ✅ เริ่มโหลดเมื่อเปิดหน้า
 window.addEventListener("load", () => {
   fetchSensorData();
-  setInterval(fetchSensorData, 1000); // โหลดทุก 2 วินาที
+  setInterval(fetchSensorData, 1000); // โหลดทุก 1 วินาที
 });
