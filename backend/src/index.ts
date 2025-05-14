@@ -4,6 +4,12 @@ import axios from "axios";
 import cors from "cors";
 import bodyParser from "body-parser";
 import { PrismaClient } from "@prisma/client";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const app = express();
 const prisma = new PrismaClient();
@@ -14,6 +20,14 @@ app.use(cors());
 app.use(bodyParser.json());
 
 let lastSensorData: { light: number; temp: number; humidity: number } | null = null;
+
+function cleanAIResponse(text: string): string {
+  // ลบ <think>...</think>
+  text = text.replace(/<think>.*?<\/think>/, "");
+  // ลบ tag HTML อื่น ๆ ถ้ามี
+  text = text.replace(/<[^>]+>/g, "");
+  return text.trim();
+}
 
 // ===== Helper =====
 function getLightStatus(light: number): string {
@@ -44,9 +58,10 @@ function getHumidityStatus(humidity: number): string {
 }
 
 // ===== LINE Reply =====
-async function replyToUser(replyToken: string, message: string) {
+async function replyToUserAndDelete(id: number, replyToken: string, message: string) {
   try {
     const trimmedMessage = message.length > 4000 ? message.slice(0, 4000) + "\n...(ตัดข้อความ)" : message;
+
     await axios.post("https://api.line.me/v2/bot/message/reply", {
       replyToken,
       messages: [{ type: "text", text: trimmedMessage }],
@@ -56,6 +71,8 @@ async function replyToUser(replyToken: string, message: string) {
         "Content-Type": "application/json",
       },
     });
+
+    await prisma.pendingReply.delete({ where: { id } });
     console.log("✅ ส่งข้อความกลับ LINE แล้ว:", trimmedMessage);
   } catch (err: any) {
     console.error("❌ LINE reply error:", err?.response?.data || err?.message);
@@ -69,14 +86,15 @@ async function askOllama(
   temp: number,
   humidity: number
 ): Promise<string> {
-  const systemPrompt = "คุณเป็นผู้ช่วยวิเคราะห์สภาพอากาศจากเซ็นเซอร์";
+  const systemPrompt = "คุณคือผู้ช่วยวิเคราะห์สภาพอากาศ**คุณต้องตอบกลับเป็นภาษาไทยเท่านั้น ห้ามใช้ภาษาอังกฤษเด็ดขาด**";
   const userPrompt = `
 ข้อมูลเซ็นเซอร์:
 - ค่าแสง: ${light} lux
 - อุณหภูมิ: ${temp} °C
 - ความชื้น: ${humidity} %
 คำถาม: "${question}"
-ตอบสั้น ๆ ชัดเจน เป็นภาษาไทย`;
+
+กรุณาตอบคำถามนี้ด้วยภาษาที่สุภาพ ชัดเจน สั้นกระชับ และเป็นภาษาไทยทั้งหมด ห้ามมีภาษาอังกฤษเด็ดขาด`;
 
   try {
     const response = await axios.post("http://localhost:11434/api/chat", {
@@ -121,8 +139,25 @@ app.post("/webhook", async (req: Request, res: Response) => {
       console.log(`✅ มี userId นี้อยู่แล้ว: ${userId}`);
     }
 
+    // ตรวจสอบว่า replyToken ซ้ำหรือยัง
+    const exists = await prisma.pendingReply.findUnique({
+      where: { replyToken }
+    });
+    if (exists) {
+      console.log(`⏭️ ข้ามซ้ำ replyToken: ${replyToken}`);
+      continue;
+    } else {
+      console.log(`✅ ไม่มีซ้ำ replyToken: ${replyToken}`);
+    }
+
+    // บันทึกข้อความลง PendingReply
+    const created = await prisma.pendingReply.create({
+      data: { replyToken, userId, messageType, text }
+    });
+    console.log(`✅ บันทึก PendingReply ID ${created.id}`);
+
     if (!lastSensorData) {
-      await replyToUser(replyToken, "❌ ยังไม่มีข้อมูลจากเซ็นเซอร์");
+      await replyToUserAndDelete(created.id, replyToken, "❌ ยังไม่มีข้อมูลจากเซ็นเซอร์");
       continue;
     }
 
@@ -136,7 +171,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
 💡 ค่าแสง: ${light} lux (${lightStatus})
 🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
 💧 ความชื้น: ${humidity} % (${humidityStatus})`;
-      await replyToUser(replyToken, msg);
+      await replyToUserAndDelete(created.id, replyToken, msg);
       continue;
     }
 
@@ -167,7 +202,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
       replyText = await askOllama(text, light, temp, humidity);
     }
 
-    await replyToUser(replyToken, replyText);
+    await replyToUserAndDelete(created.id, replyToken, replyText);
   }
 
   res.sendStatus(200);
@@ -213,13 +248,32 @@ setInterval(async () => {
   const lightStatus = getLightStatus(light);
   const tempStatus = getTempStatus(temp);
   const humidityStatus = getHumidityStatus(humidity);
-  const aiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity);
+
+  const now = dayjs().tz("Asia/Bangkok");
+  const buddhistYear = now.year() + 543;
+
+  const thaiDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+  const thaiMonths = [
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+  ];
+
+  const dayName = thaiDays[now.day()];
+  const monthName = thaiMonths[now.month()];
+
+  const thaiTime = `วัน${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear} เวลา ${now.format("HH:mm")} น.`;
+
+
+  const rawAiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้ **คุณต้องตอบเป็นภาษาไทยเท่านั้น** ห้ามใช้ภาาาอังกฤษ และห้ามใช้ภาษาจีน ", light, temp, humidity);
+  const aiAnswer = cleanAIResponse(rawAiAnswer);
+
 
   const message = `📡 รายงานอัตโนมัติ :
-💡 ค่าแสง: ${light} lux (${lightStatus})
-🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
-💧 ความชื้น: ${humidity} % (${humidityStatus})
-🤖 AI: ${aiAnswer}`;
+🕒 เวลา : ${thaiTime}
+💡 ค่าแสง : ${light} lux (${lightStatus})
+🌡️ อุณหภูมิ : ${temp} °C (${tempStatus})
+💧 ความชื้น : ${humidity} % (${humidityStatus})
+🤖 AI : ${aiAnswer}`;
 
   const users = await prisma.user.findMany();
   for (const u of users) {
@@ -233,6 +287,7 @@ setInterval(async () => {
       },
     });
   }
+  console.log(`✅ รายงานอัตโนมัติส่งแล้วเวลาไทย: ${thaiTime}`);
 }, 5 * 60 * 1000);
 
 // ===== Root route
