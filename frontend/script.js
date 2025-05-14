@@ -1,4 +1,4 @@
-const BASE_URL = "https://api.biwbong.shop"; 
+const BASE_URL = "https://ce395backend.loca.lt"; 
 const API_URL = `${BASE_URL}/latest`; // สำหรับโหลดข้อมูลเซ็นเซอร์
 const ASK_AI_URL = `${BASE_URL}/ask-ai`; // สำหรับถาม AI
 

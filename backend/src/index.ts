@@ -238,7 +238,7 @@ setInterval(async () => {
 // ===== Root route
 app.get("/", async (req: Request, res: Response) => {
   try {
-    const sensor = await axios.get("https://onto-shortly-robot-derek.trycloudflare.com/latest");
+    const sensor = await axios.get("http://localhost:3000/latest");
     const { light, temp, humidity } = sensor.data;
     const lightStatus = getLightStatus(light);
     const tempStatus = getTempStatus(temp);
