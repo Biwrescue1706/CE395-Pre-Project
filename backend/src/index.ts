@@ -129,7 +129,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
       text
     });
 
-    if (!userId || !replyToken) continue;
+    if (!userId) continue;
 
     const existingUser = await prisma.user.findUnique({ where: { userId } });
     if (!existingUser) {
@@ -268,7 +268,7 @@ setInterval(async () => {
   const aiAnswer = cleanAIResponse(rawAiAnswer);
 
 
-  const message = `📡 รายงานอัตโนมัติ :
+  const message = `📡 รายงานอัตโนมัติ ทุก 5 นาที :
 🕒 เวลา : ${thaiTime}
 💡 ค่าแสง : ${light} lux (${lightStatus})
 🌡️ อุณหภูมิ : ${temp} °C (${tempStatus})
