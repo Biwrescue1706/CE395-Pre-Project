@@ -22,11 +22,7 @@ app.use(bodyParser.json());
 let lastSensorData: { light: number; temp: number; humidity: number } | null = null;
 
 function cleanAIResponse(text: string): string {
-  // ลบ <think>...</think>
-  text = text.replace(/<think>.*?<\/think>/, "");
-  // ลบ tag HTML อื่น ๆ ถ้ามี
-  text = text.replace(/<[^>]+>/g, "");
-  return text.trim();
+  return text.replace(/<think>.*?<\/think>/, "").replace(/<[^>]+>/g, "").trim();
 }
 
 // ===== Helper =====
@@ -74,6 +70,7 @@ async function replyToUserAndDelete(id: number, replyToken: string, message: str
 
     await prisma.pendingReply.delete({ where: { id } });
     console.log("✅ ส่งข้อความกลับ LINE แล้ว:", trimmedMessage);
+    console.log("✅ ลบ replyToken:", id);
   } catch (err: any) {
     console.error("❌ LINE reply error:", err?.response?.data || err?.message);
   }
@@ -86,28 +83,22 @@ async function askOllama(
   temp: number,
   humidity: number
 ): Promise<string> {
-  const systemPrompt = "คุณคือผู้ช่วยวิเคราะห์สภาพอากาศ**คุณต้องตอบกลับเป็นภาษาไทยเท่านั้น ห้ามใช้ภาษาอังกฤษเด็ดขาด**";
-  const userPrompt = `
-ข้อมูลเซ็นเซอร์:
-- ค่าแสง: ${light} lux
-- อุณหภูมิ: ${temp} °C
-- ความชื้น: ${humidity} %
-คำถาม: "${question}"
-
-กรุณาตอบคำถามนี้ด้วยภาษาที่สุภาพ ชัดเจน สั้นกระชับ และเป็นภาษาไทยทั้งหมด ห้ามมีภาษาอังกฤษเด็ดขาด`;
+  const prompt = `แสง: ${light} lux, อุณหภูมิ: ${temp}°C, ความชื้น: ${humidity}%\nคำถาม: ${question} กรุณาตอบคำถามนี้ด้วยภาษาที่สุภาพ ชัดเจน สั้นกระชับ และเป็นภาษาไทยทั้งหมด ห้ามมีภาษาอังกฤษเด็ดขาด`;
 
   try {
-    const response = await axios.post("http://localhost:11434/api/chat", {
-      model: "deepseek-r1:14b-qwen-distill-q4_K_M",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      stream: false,
+    console.log("📤 กำลังถาม AI:", { question, prompt });
+
+    const res = await axios.post("http://localhost:11434/api/generate", {
+      model: "deepseek-r1:7b-qwen-distill-q4_K_M",
+      prompt,
+      system: "คุณคือผู้ช่วยวิเคราะห์อากาศ ตอบด้วยภาษาไทยเท่านั้น",
+      stream: false
     });
-    return response.data?.message?.content || "❌ ไม่สามารถตอบคำถามได้";
-  } catch (err) {
-    console.error("❌ Ollama error:", err);
+
+    console.log("🤖 ได้คำตอบจาก AI:", res.data);
+    return cleanAIResponse(res.data?.response || "❌ ไม่สามารถตอบคำถามได้");
+  } catch (err: any) {
+    console.error("❌ AI Error:", err?.response?.data || err?.message || err);
     return "❌ เกิดข้อผิดพลาดในการติดต่อ AI";
   }
 }
@@ -178,7 +169,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
     let replyText = "";
 
     if (text === "สภาพอากาศตอนนี้เป็นอย่างไร") {
-      replyText = `📊 สภาพอากาศล่าสุด :
+      replyText = `📊 สภาพอากาศตอนนี้ :
 💡 ค่าแสง: ${light} lux (${lightStatus})
 🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
 💧 ความชื้น: ${humidity} % (${humidityStatus})
@@ -208,7 +199,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
   res.sendStatus(200);
 });
 
-// ===== ESP8266/ESP32 Sensor Data
+// ===== เซ็นเซอร์ ESP
 app.post("/sensor-data", (req: Request, res: Response) => {
   const { light, temp, humidity } = req.body;
   if (light !== undefined && temp !== undefined && humidity !== undefined) {
@@ -219,28 +210,26 @@ app.post("/sensor-data", (req: Request, res: Response) => {
   }
 });
 
-// ===== Get Latest Sensor Data
 app.get("/latest", (req: Request, res: Response) => {
-  if (lastSensorData) {
-    res.json(lastSensorData);
-  } else {
-    res.status(404).json({ message: "❌ ไม่มีข้อมูลเซ็นเซอร์" });
-  }
+  if (lastSensorData) res.json(lastSensorData);
+  else res.status(404).json({ message: "❌ ไม่มีข้อมูลเซ็นเซอร์" });
 });
 
-// ===== ถาม AI จาก frontend
+// ===== AI จากหน้าเว็บ
 app.post("/ask-ai", async (req: Request, res: Response) => {
   const { question } = req.body;
   if (!question || !lastSensorData) {
     res.status(400).json({ error: "❌ คำถามหรือข้อมูลไม่ครบ" });
     return;
   }
+
   const { light, temp, humidity } = lastSensorData;
-  const answer = await askOllama(question, light, temp, humidity);
-  res.json({ answer });
+  const raw = await askOllama(question, light, temp, humidity);
+  const cleaned = cleanAIResponse(raw);
+  res.json({ answer: cleaned });
 });
 
-// ===== รายงานอัตโนมัติทุก 5 นาที
+// ===== รายงานอัตโนมัติ
 setInterval(async () => {
   if (!lastSensorData) return;
 
@@ -251,7 +240,6 @@ setInterval(async () => {
 
   const now = dayjs().tz("Asia/Bangkok");
   const buddhistYear = now.year() + 543;
-
   const thaiDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
   const thaiMonths = [
     "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
@@ -260,17 +248,14 @@ setInterval(async () => {
 
   const dayName = thaiDays[now.day()];
   const monthName = thaiMonths[now.month()];
-
   const thaiTime = `วัน${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear} เวลา ${now.format("HH:mm")} น.`;
 
-
-  const rawAiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้ **คุณต้องตอบเป็นภาษาไทยเท่านั้น** ห้ามใช้ภาาาอังกฤษ และห้ามใช้ภาษาจีน ", light, temp, humidity);
+  const rawAiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity);
   const aiAnswer = cleanAIResponse(rawAiAnswer);
 
-
-  const message = `📡 รายงานอัตโนมัติ ทุก 5 นาที :
+  const message = `📡 รายงานอัตโนมัติ :
 🕒 เวลา : ${thaiTime}
-💡 ค่าแสง : ${light} lux (${lightStatus})
+💡 แสง : ${light} lux (${lightStatus})
 🌡️ อุณหภูมิ : ${temp} °C (${tempStatus})
 💧 ความชื้น : ${humidity} % (${humidityStatus})
 🤖 AI : ${aiAnswer}`;
@@ -290,10 +275,10 @@ setInterval(async () => {
   console.log(`✅ รายงานอัตโนมัติส่งแล้วเวลาไทย: ${thaiTime}`);
 }, 5 * 60 * 1000);
 
-// ===== Root route
+// ===== Root
 app.get("/", async (req: Request, res: Response) => {
   try {
-    const sensor = await axios.get("http://localhost:3000/latest");
+    const sensor = await axios.get("https://ce395backend.loca.lt/latest");
     const { light, temp, humidity } = sensor.data;
     const lightStatus = getLightStatus(light);
     const tempStatus = getTempStatus(temp);
@@ -303,7 +288,7 @@ app.get("/", async (req: Request, res: Response) => {
 🌡 อุณหภูมิ: ${temp} °C ( ${tempStatus} ) <br>
 💧 ความชื้น: ${humidity} % ( ${humidityStatus} )`);
   } catch {
-    res.send(`✅ Hello World!`);
+    res.send("✅ Hello World!");
   }
 });
 

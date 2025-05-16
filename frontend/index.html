@@ -47,11 +47,13 @@
   <!-- ถาม AI -->
   <section class="section ai-box">
     <h2>💬 ถาม AI เกี่ยวกับสภาพอากาศ</h2>
-    <div class="ai-form">
-      <input type="text" id="user-question" placeholder="เช่น ควรตากผ้าไหมวันนี้?" />
-      <button onclick="askAI()">ถาม AI</button>
+    <div class="ai-container">
+      <div class="ai-answer-box" id="ai-answer">--</div>
+      <div class="ai-form">
+        <input type="text" id="user-question" placeholder="เช่น ควรตากผ้าไหมวันนี้?" />
+        <button onclick="askAI()">ถาม AI</button>
+      </div>
     </div>
-    <p id="ai-answer">--</p>
   </section>
 
   <script src="script.js"></script>

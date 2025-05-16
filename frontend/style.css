@@ -36,6 +36,26 @@ body {
   margin-bottom: 20px;
 }
 
+.ai-container {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 15px;
+  background-color: #f9f9f9;
+}
+
+.ai-answer-box {
+  min-height: 80px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px dashed #aaa;
+  background-color: #fff;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
 .ai-form {
   display: flex;
   justify-content: center;
@@ -223,7 +243,7 @@ body {
   background-color: #9be7ff;
 }
 
-/* 📱 Responsive: มือถือ & แท็บเล็ต */
+/* Responsive */
 @media (max-width: 768px) {
   .sensor-wrapper {
     flex-direction: column;
