@@ -1,8 +1,8 @@
-const BASE_URL = "https://ce395backend.loca.lt"; 
-const API_URL = `${BASE_URL}/latest`; // สำหรับโหลดข้อมูลเซ็นเซอร์
-const ASK_AI_URL = `${BASE_URL}/ask-ai`; // สำหรับถาม AI
+const BASE_URL = "https://bay-tanzania-mass-him.trycloudflare.com";
+const API_URL = `${BASE_URL}/latest`;      // โหลดข้อมูลเซ็นเซอร์
+const ASK_AI_URL = `${BASE_URL}/ask-ai`;   // ถาม AI
 
-// ✅ โหลดข้อมูลเซ็นเซอร์ล่าสุด
+// โหลดข้อมูลเซ็นเซอร์ล่าสุด
 async function fetchSensorData() {
   try {
     const response = await fetch(API_URL);
@@ -10,7 +10,6 @@ async function fetchSensorData() {
 
     const { light, temp, humidity } = data;
 
-    // แสดงค่าต่าง ๆ
     document.getElementById("light").textContent = light;
     document.getElementById("temp").textContent = temp;
     document.getElementById("humidity").textContent = humidity;
@@ -18,7 +17,6 @@ async function fetchSensorData() {
     document.getElementById("temp-status").textContent = getTempStatusText(temp);
     document.getElementById("humidity-status").textContent = getHumidityStatusText(humidity);
 
-    // วันที่และเวลา (แบบไทย)
     const now = new Date();
     const thaiDate = getThaiDateParts(now);
     document.getElementById("datestamp").textContent = `${thaiDate.dayOfWeek}ที่ ${thaiDate.day} ${thaiDate.month} พ.ศ. ${thaiDate.year}`;
@@ -28,32 +26,41 @@ async function fetchSensorData() {
   }
 }
 
-// ✅ ถาม AI ผ่าน backend
+// ถาม AI ผ่าน backend
 async function askAI() {
-  const question = document.getElementById("user-question").value.trim();
+  const question = document.getElementById("user-question").value.trim();;
   const answerBox = document.getElementById("ai-answer");
-
   if (!question) {
     answerBox.textContent = "⚠️ กรุณาพิมพ์คำถามก่อนนะครับ";
     return;
   }
 
   try {
-    answerBox.textContent = "⏳ กำลังถาม AI...";
+    answerBox.innerHTML = `
+    <p>📨 คำถาม : ${question} </p>
+    <p>⏳ กำลังถาม AI... </p>`;
+
     const response = await fetch(ASK_AI_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question }),
     });
+
     const data = await response.json();
-    answerBox.textContent = data.answer || "❌ ไม่มีคำตอบจาก AI";
+    const aiAnswer = data.answer ?? "❌ ไม่มีคำตอบจาก AI";
+
+    answerBox.innerHTML = `  
+    <p>📨 คำถาม : ${question}</p>
+    <p>🤖 คำตอบ ของ AI : ${aiAnswer}</p>
+    `;
+    
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาด:", error);
     answerBox.textContent = "❌ ไม่สามารถติดต่อ AI ได้";
   }
 }
 
-// ✅ แปลสถานะจากค่าเซ็นเซอร์
+// แปลสถานะจากค่าเซ็นเซอร์
 function getLightStatusText(light) {
   if (light > 50000) return "แดดจ้า ☀️";
   if (light > 10000) return "กลางแจ้ง มีเมฆ หรือแดดอ่อน 🌤";
@@ -83,7 +90,7 @@ function getHumidityStatusText(humidity) {
   return "อากาศแห้งมาก 🏜️";
 }
 
-// ✅ แปลงวันที่และเวลาเป็นแบบไทย
+// แปลงวันที่และเวลาเป็นแบบไทย
 function getThaiDateParts(date) {
   const optionsDate = { weekday: "long", day: "numeric", month: "long", year: "numeric" };
   const optionsTime = { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false };
@@ -100,8 +107,8 @@ function getThaiDateParts(date) {
   };
 }
 
-// ✅ เริ่มโหลดเมื่อเปิดหน้า
+// เริ่มโหลดเมื่อเปิดหน้า
 window.addEventListener("load", () => {
   fetchSensorData();
-  setInterval(fetchSensorData, 1000); // โหลดทุก 1 วินาที
+  setInterval(fetchSensorData, 500); // โหลดทุก 1 วินาที
 });

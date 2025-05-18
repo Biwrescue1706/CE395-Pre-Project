@@ -89,7 +89,7 @@ async function askOllama(
     console.log("📤 กำลังถาม AI:", { question, prompt });
 
     const res = await axios.post("http://localhost:11434/api/generate", {
-      model: "deepseek-r1:7b-qwen-distill-q4_K_M",
+      model: "gemma:7b",
       prompt,
       system: "คุณคือผู้ช่วยวิเคราะห์อากาศ ตอบด้วยภาษาไทยเท่านั้น",
       stream: false
@@ -238,6 +238,11 @@ setInterval(async () => {
   const tempStatus = getTempStatus(temp);
   const humidityStatus = getHumidityStatus(humidity);
 
+  // ❗ รอ AI ตอบก่อน แล้วค่อยเก็บเวลาปัจจุบันหลังจากนี้
+  const rawAiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity);
+  const aiAnswer = cleanAIResponse(rawAiAnswer);
+
+  // ✅ เวลา ณ ขณะ "จะส่งจริง"
   const now = dayjs().tz("Asia/Bangkok");
   const buddhistYear = now.year() + 543;
   const thaiDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
@@ -245,16 +250,14 @@ setInterval(async () => {
     "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
   ];
-
   const dayName = thaiDays[now.day()];
   const monthName = thaiMonths[now.month()];
-  const thaiTime = `วัน${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear} เวลา ${now.format("HH:mm")} น.`;
-
-  const rawAiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity);
-  const aiAnswer = cleanAIResponse(rawAiAnswer);
+  const thaiDaysTime = `${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear} เวลา ${now.format("HH:mm")} น.`;
+  const thaiTimeTime = `${now.format("HH:mm")} น.`;
 
   const message = `📡 รายงานอัตโนมัติ :
-🕒 เวลา : ${thaiTime}
+📅 วันที่ : ${thaiDaysTime}
+🕒 เวลา : ${thaiTimeTime}
 💡 แสง : ${light} lux (${lightStatus})
 🌡️ อุณหภูมิ : ${temp} °C (${tempStatus})
 💧 ความชื้น : ${humidity} % (${humidityStatus})
@@ -272,23 +275,27 @@ setInterval(async () => {
       },
     });
   }
-  console.log(`✅ รายงานอัตโนมัติส่งแล้วเวลาไทย: ${thaiTime}`);
-}, 5 * 60 * 1000);
+
+  console.log(`✅ รายงานอัตโนมัติส่งแล้วเวลาไทย : เมื่อวัน : ${thaiDaysTime} เวลา : ${thaiTimeTime}`);
+}, 10 * 60 * 1000);
+
 
 // ===== Root
 app.get("/", async (req: Request, res: Response) => {
   try {
-    const sensor = await axios.get("https://ce395backend.loca.lt/latest");
+    const sensor = await axios.get("http://localhost:3000/latest");
     const { light, temp, humidity } = sensor.data;
     const lightStatus = getLightStatus(light);
     const tempStatus = getTempStatus(temp);
     const humidityStatus = getHumidityStatus(humidity);
-    res.send(`✅ Hello World!<br>
+    res.send(`✅ Backend is running <br>
+      ✅ Hello World!<br>
 💡 ค่าแสง: ${light} lux ( ${lightStatus} ) <br>
 🌡 อุณหภูมิ: ${temp} °C ( ${tempStatus} ) <br>
 💧 ความชื้น: ${humidity} % ( ${humidityStatus} )`);
   } catch {
-    res.send("✅ Hello World!");
+    res.send(`✅ Backend is running <br>
+      ✅ Hello World!`);
   }
 });
 
