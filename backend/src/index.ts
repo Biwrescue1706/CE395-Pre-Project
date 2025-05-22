@@ -18,6 +18,7 @@ const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN || "";
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.json());
 
 let lastSensorData: { light: number; temp: number; humidity: number } | null = null;
 
@@ -205,6 +206,7 @@ app.post("/sensor-data", (req: Request, res: Response) => {
   if (light !== undefined && temp !== undefined && humidity !== undefined) {
     lastSensorData = { light, temp, humidity };
     res.json({ message: "✅ รับข้อมูลแล้ว" });
+    res.status(200).json({ received: true });
   } else {
     res.status(400).json({ message: "❌ ข้อมูลไม่ครบ" });
   }
