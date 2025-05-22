@@ -27,30 +27,30 @@ function cleanAIResponse(text: string): string {
 
 // ===== Helper =====
 function getLightStatus(light: number): string {
-  if (light > 50000) return "แดดจ้า ☀️";
-  if (light > 10000) return "กลางแจ้ง มีเมฆ หรือแดดอ่อน 🌤";
-  if (light > 5000) return "ฟ้าครึ้ม 🌥";
-  if (light > 1000) return "ห้องที่มีแสงธรรมชาติ 🌈";
-  if (light > 500) return "ออฟฟิศ หรือร้านค้า 💡";
-  if (light > 100) return "ห้องนั่งเล่น ไฟบ้าน 🌙";
-  if (light > 10) return "ไฟสลัว 🌑";
-  return "มืดมากๆ 🕳️";
+  if (light > 50000) return "สว่างจัดมาก";
+  if (light > 10000) return "สว่างมาก";
+  if (light > 5000) return "สว่างปานกลาง";
+  if (light > 1000) return "ค่อนข้างสว่าง";
+  if (light > 500) return "แสงพอใช้";
+  if (light > 100) return "แสงน้อย";
+  if (light > 10) return "มืดสลัว";
+  return "มืดมาก";
 }
 function getTempStatus(temp: number): string {
-  if (temp > 35) return "อุณหภูมิร้อนมาก ⚠️";
-  if (temp >= 30) return "อุณหภูมิร้อน 🔥";
-  if (temp >= 25) return "อุณหภูมิอุ่นๆ 🌞";
-  if (temp >= 20) return "อุณหภูมิพอดี 🌤";
-  return "อุณหูมิเย็น ❄️";
+  if (temp > 35) return "อุณหภูมิร้อนมาก";
+  if (temp >= 30) return "อุณหภูมิร้อน";
+  if (temp >= 25) return "อุณหภูมิอุ่นๆ";
+  if (temp >= 20) return "อุณหภูมิพอดี";
+  return "อุณหูมิเย็น";
 }
 function getHumidityStatus(humidity: number): string {
-  if (humidity > 85) return "ชื้นมาก อากาศอึดอัด 🌧️";
-  if (humidity > 70) return "อากาศชื้น เหนียวตัว 💦";
-  if (humidity > 60) return "เริ่มชื้น 🌫️";
-  if (humidity > 40) return "อากาศสบาย ✅";
-  if (humidity > 30) return "ค่อนข้างแห้ง 💨";
-  if (humidity > 20) return "แห้งมาก 🥵";
-  return "อากาศแห้งมาก 🏜️";
+  if (humidity > 85) return "ชื้นมาก อากาศอึดอัด";
+  if (humidity > 70) return "อากาศชื้น เหนียวตัว";
+  if (humidity > 60) return "เริ่มชื้น";
+  if (humidity > 40) return "อากาศสบาย";
+  if (humidity > 30) return "ค่อนข้างแห้ง";
+  if (humidity > 20) return "แห้งมาก";
+  return "อากาศแห้งมาก";
 }
 
 // ===== LINE Reply =====
@@ -159,9 +159,9 @@ app.post("/webhook", async (req: Request, res: Response) => {
 
     if (messageType !== "text" || text.includes("สวัสดี")) {
       const msg = `📊 สภาพอากาศล่าสุด :
-💡 ค่าแสง: ${light} lux (${lightStatus})
-🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
-💧 ความชื้น: ${humidity} % (${humidityStatus})`;
+ค่าแสง: ${light} lux (${lightStatus})
+อุณหภูมิ: ${temp} °C (${tempStatus})
+ความชื้น: ${humidity} % (${humidityStatus})`;
       await replyToUserAndDelete(created.id, replyToken, msg);
       continue;
     }
@@ -169,26 +169,26 @@ app.post("/webhook", async (req: Request, res: Response) => {
     let replyText = "";
 
     if (text === "สภาพอากาศตอนนี้เป็นอย่างไร") {
-      replyText = `📊 สภาพอากาศตอนนี้ :
-💡 ค่าแสง: ${light} lux (${lightStatus})
-🌡️ อุณหภูมิ: ${temp} °C (${tempStatus})
-💧 ความชื้น: ${humidity} % (${humidityStatus})
-🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
+      replyText = `สภาพอากาศตอนนี้ :
+ค่าแสง: ${light} lux (${lightStatus})
+อุณหภูมิ: ${temp} °C (${tempStatus})
+ความชื้น: ${humidity} % (${humidityStatus})
+คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
     } else if (text === "ตอนนี้ควรตากผ้าไหม") {
-      replyText = `📌 ตอนนี้ควรตากผ้าไหม :
-💡 ค่าแสง: ${light} lux (${lightStatus})
-🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
+      replyText = `ตอนนี้ควรตากผ้าไหม :
+ค่าแสง: ${light} lux (${lightStatus})
+คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
     } else if (text === "ควรพกร่มออกจากบ้านไหม") {
-      replyText = `📌 ควรพกร่มออกจากบ้านไหม :
-🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
+      replyText = `ควรพกร่มออกจากบ้านไหม :
+คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
     } else if (text === "ความเข้มของแสงตอนนี้เป็นอย่างไร") {
-      replyText = `📊 ความเข้มของแสงตอนนี้ :
-💡 ค่าแสง: ${light} lux (${lightStatus})
-🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
+      replyText = `ความเข้มของแสงตอนนี้ :
+ค่าแสง : ${light} lux (${lightStatus})
+คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
     } else if (text === "ความชื้นตอนนี้เป็นอย่างไร") {
-      replyText = `📊 ความชื้นตอนนี้ :
-💧 ความชื้น: ${humidity} % (${humidityStatus})
-🤖 AI: ${await askOllama(text, light, temp, humidity)}`;
+      replyText = `ความชื้นตอนนี้ :
+ความชื้น : ${humidity} % (${humidityStatus})
+คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
     } else {
       replyText = await askOllama(text, light, temp, humidity);
     }
@@ -256,12 +256,12 @@ setInterval(async () => {
   const thaiTimeTime = `${now.format("HH:mm")} น.`;
 
   const message = `📡 รายงานอัตโนมัติ :
-📅 วันที่ : ${thaiDaysTime}
-🕒 เวลา : ${thaiTimeTime}
-💡 แสง : ${light} lux (${lightStatus})
-🌡️ อุณหภูมิ : ${temp} °C (${tempStatus})
-💧 ความชื้น : ${humidity} % (${humidityStatus})
-🤖 AI : ${aiAnswer}`;
+วันที่ : ${thaiDaysTime}
+เวลา : ${thaiTimeTime}
+แสง : ${light} lux (${lightStatus})
+อุณหภูมิ : ${temp} °C (${tempStatus})
+ความชื้น : ${humidity} % (${humidityStatus})
+AI : ${aiAnswer}`;
 
   const users = await prisma.user.findMany();
   for (const u of users) {
