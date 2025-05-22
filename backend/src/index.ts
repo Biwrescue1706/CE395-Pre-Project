@@ -18,7 +18,6 @@ const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN || "";
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.json());
 
 let lastSensorData: { light: number; temp: number; humidity: number } | null = null;
 
@@ -206,7 +205,6 @@ app.post("/sensor-data", (req: Request, res: Response) => {
   if (light !== undefined && temp !== undefined && humidity !== undefined) {
     lastSensorData = { light, temp, humidity };
     res.json({ message: "✅ รับข้อมูลแล้ว" });
-    res.status(200).json({ received: true });
   } else {
     res.status(400).json({ message: "❌ ข้อมูลไม่ครบ" });
   }
@@ -254,7 +252,7 @@ setInterval(async () => {
   ];
   const dayName = thaiDays[now.day()];
   const monthName = thaiMonths[now.month()];
-  const thaiDaysTime = `${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear} `;
+  const thaiDaysTime = `${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear} เวลา ${now.format("HH:mm")} น.`;
   const thaiTimeTime = `${now.format("HH:mm")} น.`;
 
   const message = `📡 รายงานอัตโนมัติ :

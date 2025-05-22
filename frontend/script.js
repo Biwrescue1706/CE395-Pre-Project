@@ -1,4 +1,4 @@
-const BASE_URL = "https://bay-tanzania-mass-him.trycloudflare.com";
+const BASE_URL = "https://action-determined-draws-stars.trycloudflare.com";
 const API_URL = `${BASE_URL}/latest`;      // โหลดข้อมูลเซ็นเซอร์
 const ASK_AI_URL = `${BASE_URL}/ask-ai`;   // ถาม AI
 
@@ -31,7 +31,6 @@ async function askAI() {
   const input = document.getElementById("user-question");
   const question = input.value.trim();
   const answerBox = document.getElementById("ai-answer");
-
   if (!question) {
     answerBox.textContent = "⚠️ กรุณาพิมพ์คำถามก่อนนะครับ";
     return;
@@ -55,9 +54,7 @@ async function askAI() {
     <p>📨 คำถาม : ${question}</p>
     <p>🤖 คำตอบ ของ AI : ${aiAnswer}</p>
     `;
-
-    input.value = ""; // ✅ ล้างช่อง input หลังจาก AI ตอบแล้ว
-
+    input.value = "";
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาด:", error);
     answerBox.textContent = "❌ ไม่สามารถติดต่อ AI ได้";
@@ -114,5 +111,5 @@ function getThaiDateParts(date) {
 // เริ่มโหลดเมื่อเปิดหน้า
 window.addEventListener("load", () => {
   fetchSensorData();
-  setInterval(fetchSensorData, 500); // โหลดทุก 1 วินาที
+  setInterval(fetchSensorData, 500); // โหลดทุก 0.5 วินาที
 });
