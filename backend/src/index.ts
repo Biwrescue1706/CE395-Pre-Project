@@ -256,12 +256,12 @@ setInterval(async () => {
   const thaiTimeTime = `${now.format("HH:mm")} น.`;
 
   const message = `📡 รายงานอัตโนมัติ :
-วันที่ : ${thaiDaysTime}
-เวลา : ${thaiTimeTime}
-แสง : ${light} lux (${lightStatus})
-อุณหภูมิ : ${temp} °C (${tempStatus})
-ความชื้น : ${humidity} % (${humidityStatus})
-AI : ${aiAnswer}`;
+📅 วันที่ : ${thaiDaysTime}
+🕒 เวลา : ${thaiTimeTime}
+💡 แสง : ${light} lux
+🌡️อุณหภูมิ : ${temp} °C (${tempStatus})
+💧 ความชื้น : ${humidity} % (${humidityStatus})
+🤖 คำตอบจาก AI : ${aiAnswer}`;
 
   const users = await prisma.user.findMany();
   for (const u of users) {

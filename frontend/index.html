@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ระบบพยากรณ์อากาศอัจฉริยะ ด้วย AI และ IoT</title>
+  <title>ระบบพยากรณ์อากาศอัจฉริยะ ด้วย AI</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -26,20 +26,17 @@
   <section class="sensor-wrapper">
     <div class="sensor-card">
       <h2>💡 แสง</h2>
-      <p id="light">--</p>
-      <p>lux</p>
+      <p><span id="light">--</span> <span class="unit">lux</span></p>
       <p id="light-status" class="status-text">--</p>
     </div>
     <div class="sensor-card">
       <h2>🌡️ อุณหภูมิ</h2>
-      <p id="temp">--</p>
-      <p>°C</p>
+      <p><span id="temp">--</span> <span class="unit">°C</span></p>
       <p id="temp-status" class="status-text">--</p>
     </div>
     <div class="sensor-card">
       <h2>💧 ความชื้น</h2>
-      <p id="humidity">--</p>
-      <p>%</p>
+      <p><span id="humidity">--</span> <span class="unit">%</span></p>
       <p id="humidity-status" class="status-text">--</p>
     </div>
   </section>
