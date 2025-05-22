@@ -252,7 +252,7 @@ setInterval(async () => {
   ];
   const dayName = thaiDays[now.day()];
   const monthName = thaiMonths[now.month()];
-  const thaiDaysTime = `${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear} เวลา ${now.format("HH:mm")} น.`;
+  const thaiDaysTime = `${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear} `;
   const thaiTimeTime = `${now.format("HH:mm")} น.`;
 
   const message = `📡 รายงานอัตโนมัติ :
