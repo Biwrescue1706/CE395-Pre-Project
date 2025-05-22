@@ -28,8 +28,10 @@ async function fetchSensorData() {
 
 // ถาม AI ผ่าน backend
 async function askAI() {
-  const question = document.getElementById("user-question").value.trim();;
+  const input = document.getElementById("user-question");
+  const question = input.value.trim();
   const answerBox = document.getElementById("ai-answer");
+
   if (!question) {
     answerBox.textContent = "⚠️ กรุณาพิมพ์คำถามก่อนนะครับ";
     return;
@@ -53,7 +55,9 @@ async function askAI() {
     <p>📨 คำถาม : ${question}</p>
     <p>🤖 คำตอบ ของ AI : ${aiAnswer}</p>
     `;
-    
+
+    input.value = ""; // ✅ ล้างช่อง input หลังจาก AI ตอบแล้ว
+
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาด:", error);
     answerBox.textContent = "❌ ไม่สามารถติดต่อ AI ได้";

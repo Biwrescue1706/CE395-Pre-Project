@@ -17,8 +17,7 @@ body {
   word-wrap: break-word;
 
   display: flex;
-  flex-direction: column;
-  /* วางข้อความในแนวตั้ง */
+  flex-direction: column; /* วางข้อความในแนวตั้ง */
 }
 
 #ai-answer p {
