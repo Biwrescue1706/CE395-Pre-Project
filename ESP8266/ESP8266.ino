@@ -14,15 +14,11 @@ DHT dht(DHTPIN, DHTTYPE);
 BH1750 lightMeter;
 
 // ==== WiFi ====
-// char ssid[] = "biwphuwanat_2.4G";
-// char pass[] = "17202563";
 char ssid[] = "BiwBong";
 char pass[] = "17061706";
 
 // ==== Backend URL ====
-// const char* serverUrl = "http://192.168.1.5:3000/sensor-data";
-// const char* serverUrl = "http://192.168.66.129:3000/sensor-data";
-const char* serverUrl = "https://ce395backend.loca.lt/sensor-data";
+const char* serverUrl = "https://elvis-clone-draw-specialties.trycloudflare.com/sensor-data";
 
 void setup() {
   Serial.begin(115200);

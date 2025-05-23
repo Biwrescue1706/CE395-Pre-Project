@@ -160,9 +160,9 @@ app.post("/webhook", async (req: Request, res: Response) => {
 
     if (messageType !== "text" || text.includes("สวัสดี")) {
       const msg = `📊 สภาพอากาศล่าสุด :
-ค่าแสง: ${light} lux (${lightStatus})
-อุณหภูมิ: ${temp} °C (${tempStatus})
-ความชื้น: ${humidity} % (${humidityStatus}) `; 
+- ค่าแสง: ${light} lux (${lightStatus})
+- อุณหภูมิ: ${temp} °C (${tempStatus})
+- ความชื้น: ${humidity} % (${humidityStatus}) `; 
       await replyToUserAndDelete(created.id, replyToken, msg);
       continue;
     }
@@ -275,7 +275,7 @@ setInterval(async () => {
   }
 
   console.log(`✅ รายงานอัตโนมัติส่งแล้วเวลาไทย : เมื่อวัน : ${thaiDaysTime} เวลา : ${thaiTimeTime}`);
-}, 4 * 60 * 1000);
+}, 5 * 60 * 1000);
 
 
 // ===== Root
