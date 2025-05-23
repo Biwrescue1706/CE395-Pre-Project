@@ -17,6 +17,7 @@ const PORT = process.env.PORT || 3000;
 const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN || "";
 
 app.use(cors());
+app.use(express.json());
 app.use(bodyParser.json());
 
 let lastSensorData: { light: number; temp: number; humidity: number } | null = null;
