@@ -231,51 +231,51 @@ app.post("/ask-ai", async (req: Request, res: Response) => {
 });
 
 // ===== รายงานอัตโนมัติ
-// setInterval(async () => {
-//   if (!lastSensorData) return;
+setInterval(async () => {
+  if (!lastSensorData) return;
 
-//   const { light, temp, humidity } = lastSensorData;
+  const { light, temp, humidity } = lastSensorData;
 
-//   // ❗ รอ AI ตอบก่อน แล้วค่อยเก็บเวลาปัจจุบันหลังจากนี้
-//   const rawAiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity);
-//   const aiAnswer = cleanAIResponse(rawAiAnswer);
+  // ❗ รอ AI ตอบก่อน แล้วค่อยเก็บเวลาปัจจุบันหลังจากนี้
+  const rawAiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity);
+  const aiAnswer = cleanAIResponse(rawAiAnswer);
 
-//   // ✅ เวลา ณ ขณะ "จะส่งจริง"
-//   const now = dayjs().tz("Asia/Bangkok");
-//   const buddhistYear = now.year() + 543;
-//   const thaiDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
-//   const thaiMonths = [
-//     "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-//     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
-//   ];
-//   const dayName = thaiDays[now.day()];
-//   const monthName = thaiMonths[now.month()];
-//   const thaiDaysTime = `${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear}`;
-//   const thaiTimeTime = `${now.format("HH:mm")} น.`;
+  // ✅ เวลา ณ ขณะ "จะส่งจริง"
+  const now = dayjs().tz("Asia/Bangkok");
+  const buddhistYear = now.year() + 543;
+  const thaiDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+  const thaiMonths = [
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+  ];
+  const dayName = thaiDays[now.day()];
+  const monthName = thaiMonths[now.month()];
+  const thaiDaysTime = `${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear}`;
+  const thaiTimeTime = `${now.format("HH:mm")} น.`;
 
-//   const message = `📡 รายงานอัตโนมัติ :
-// 📅 วันที่ : ${thaiDaysTime}
-// 🕒 เวลา : ${thaiTimeTime}
-// 💡 แสง : ${light} lux
-// 🌡️อุณหภูมิ : ${temp} °C
-// 💧 ความชื้น : ${humidity} %
-// 🤖 คำตอบจาก AI : ${aiAnswer}`;
+  const message = `📡 รายงานอัตโนมัติ :
+📅 วันที่ : ${thaiDaysTime}
+🕒 เวลา : ${thaiTimeTime}
+💡 แสง : ${light} lux
+🌡️อุณหภูมิ : ${temp} °C
+💧 ความชื้น : ${humidity} %
+🤖 คำตอบจาก AI : ${aiAnswer}`;
 
-//   const users = await prisma.user.findMany();
-//   for (const u of users) {
-//     await axios.post("https://api.line.me/v2/bot/message/push", {
-//       to: u.userId,
-//       messages: [{ type: "text", text: message }],
-//     }, {
-//       headers: {
-//         Authorization: `Bearer ${LINE_ACCESS_TOKEN}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-//   }
+  const users = await prisma.user.findMany();
+  for (const u of users) {
+    await axios.post("https://api.line.me/v2/bot/message/push", {
+      to: u.userId,
+      messages: [{ type: "text", text: message }],
+    }, {
+      headers: {
+        Authorization: `Bearer ${LINE_ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    });
+  }
 
-//   console.log(`✅ รายงานอัตโนมัติส่งแล้วเวลาไทย : เมื่อวัน : ${thaiDaysTime} เวลา : ${thaiTimeTime}`);
-// }, 5 * 60 * 1000);
+  console.log(`✅ รายงานอัตโนมัติส่งแล้วเวลาไทย : เมื่อวัน : ${thaiDaysTime} เวลา : ${thaiTimeTime}`);
+}, 4 * 60 * 1000);
 
 
 // ===== Root
