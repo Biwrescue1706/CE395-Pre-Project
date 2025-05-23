@@ -12,3 +12,12 @@ model User {
   userId    String   @unique
   createdAt DateTime @default(now())
 }
+
+model PendingReply {
+  id          Int      @id @default(autoincrement())
+  replyToken  String   @unique
+  userId      String
+  messageType String
+  text        String
+  createdAt   DateTime @default(now())
+}

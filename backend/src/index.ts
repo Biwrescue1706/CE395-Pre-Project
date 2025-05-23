@@ -162,7 +162,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
       const msg = `📊 สภาพอากาศล่าสุด :
 ค่าแสง: ${light} lux (${lightStatus})
 อุณหภูมิ: ${temp} °C (${tempStatus})
-ความชื้น: ${humidity} % (${humidityStatus})`;
+ความชื้น: ${humidity} % (${humidityStatus}) `; 
       await replyToUserAndDelete(created.id, replyToken, msg);
       continue;
     }
@@ -171,25 +171,25 @@ app.post("/webhook", async (req: Request, res: Response) => {
 
     if (text === "สภาพอากาศตอนนี้เป็นอย่างไร") {
       replyText = `สภาพอากาศตอนนี้ :
-ค่าแสง: ${light} lux (${lightStatus})
-อุณหภูมิ: ${temp} °C (${tempStatus})
-ความชื้น: ${humidity} % (${humidityStatus})
-คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
+- ค่าแสง: ${light} lux
+- อุณหภูมิ: ${temp} °C
+- ความชื้น: ${humidity} %
+- คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
     } else if (text === "ตอนนี้ควรตากผ้าไหม") {
       replyText = `ตอนนี้ควรตากผ้าไหม :
-ค่าแสง: ${light} lux (${lightStatus})
-คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
+- ค่าแสง: ${light} lux (${lightStatus})
+- คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
     } else if (text === "ควรพกร่มออกจากบ้านไหม") {
       replyText = `ควรพกร่มออกจากบ้านไหม :
-คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
+- คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
     } else if (text === "ความเข้มของแสงตอนนี้เป็นอย่างไร") {
       replyText = `ความเข้มของแสงตอนนี้ :
-ค่าแสง : ${light} lux (${lightStatus})
-คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
+- ค่าแสง : ${light} lux (${lightStatus})
+- คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
     } else if (text === "ความชื้นตอนนี้เป็นอย่างไร") {
       replyText = `ความชื้นตอนนี้ :
-ความชื้น : ${humidity} % (${humidityStatus})
-คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
+- ความชื้น : ${humidity} % (${humidityStatus})
+- คำตอบจาก AI : ${await askOllama(text, light, temp, humidity)}`;
     } else {
       replyText = await askOllama(text, light, temp, humidity);
     }
@@ -235,9 +235,6 @@ setInterval(async () => {
   if (!lastSensorData) return;
 
   const { light, temp, humidity } = lastSensorData;
-  const lightStatus = getLightStatus(light);
-  const tempStatus = getTempStatus(temp);
-  const humidityStatus = getHumidityStatus(humidity);
 
   // ❗ รอ AI ตอบก่อน แล้วค่อยเก็บเวลาปัจจุบันหลังจากนี้
   const rawAiAnswer = await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity);
@@ -253,15 +250,15 @@ setInterval(async () => {
   ];
   const dayName = thaiDays[now.day()];
   const monthName = thaiMonths[now.month()];
-  const thaiDaysTime = `${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear} เวลา ${now.format("HH:mm")} น.`;
+  const thaiDaysTime = `${dayName} ที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear}`;
   const thaiTimeTime = `${now.format("HH:mm")} น.`;
 
   const message = `📡 รายงานอัตโนมัติ :
 📅 วันที่ : ${thaiDaysTime}
 🕒 เวลา : ${thaiTimeTime}
 💡 แสง : ${light} lux
-🌡️อุณหภูมิ : ${temp} °C (${tempStatus})
-💧 ความชื้น : ${humidity} % (${humidityStatus})
+🌡️อุณหภูมิ : ${temp} °C
+💧 ความชื้น : ${humidity} %
 🤖 คำตอบจาก AI : ${aiAnswer}`;
 
   const users = await prisma.user.findMany();
@@ -278,7 +275,7 @@ setInterval(async () => {
   }
 
   console.log(`✅ รายงานอัตโนมัติส่งแล้วเวลาไทย : เมื่อวัน : ${thaiDaysTime} เวลา : ${thaiTimeTime}`);
-}, 10 * 60 * 1000);
+}, 4 * 60 * 1000);
 
 
 // ===== Root
