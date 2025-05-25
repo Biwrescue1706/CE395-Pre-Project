@@ -180,40 +180,50 @@ async function processMessageEvent(event: any) {
 - อุณหภูมิ: ${temp} °C (${tempStatus})
 - ความชื้น: ${humidity} % (${humidityStatus})`;
 
-  if (messageType !== "text" ||text.includes("สวัสดี")) {
+  // ✅ ตอบทันทีถ้าไม่ใช่ข้อความหรือเป็นคำว่า "สวัสดี"
+  if (messageType !== "text" || text.includes("สวัสดี")) {
     await replyToUser(replyToken, shortMsg);
-    console.log(`📤 ส่ง AI ตอบกลับถึง ${userId}`);
-    await deletePendingReply(created.id); // ✅ ลบหลังตอบ
+    console.log(`📤 ตอบกลับข้อความสั้นให้ ${userId}`);
+    await deletePendingReply(created.id);
     return;
   }
 
-  await replyToUser(replyToken, "⏳ กำลังถาม AI...");
+  // ✅ คำถามที่อนุญาตให้ AI ตอบ
+  const presetQuestions = [
+    "สภาพอากาศตอนนี้เป็นอย่างไร",
+    "ตอนนี้ควรตากผ้าไหม",
+    "ตอนนี้ควรพกร่มออกจากบ้านไหม",
+    "ความเข้มของแสงตอนนี้เป็นอย่างไร",
+    "ความชื้นตอนนี้เป็นอย่างไร"
+  ];
 
+  // ✅ ถ้าไม่ตรงกับ preset → ตอบ shortMsg เท่านั้น
+  if (!presetQuestions.includes(text)) {
+    await replyToUser(replyToken, shortMsg);
+    console.log(`📤 ข้อความไม่ตรง preset → ตอบ shortMsg`);
+    await deletePendingReply(created.id);
+    return;
+  }
+
+  // ✅ ตอบด้วย AI
+  await replyToUser(replyToken, "⏳ กำลังถาม AI...");
   let answer = "";
+
   if (text === "สภาพอากาศตอนนี้เป็นอย่างไร") {
     answer = `สภาพอากาศตอนนี้เป็นอย่างไร ?
-- ${shortMsg}
-- คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
+🤖 คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
   } else if (text === "ตอนนี้ควรตากผ้าไหม") {
     answer = `ตอนนี้ควรตากผ้าไหม?
-- ค่าแสง: ${light} lux
-- คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
+🤖 คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
   } else if (text === "ควรพกร่มออกจากบ้านไหม") {
     answer = `ควรพกร่มออกจากบ้านไหม?
-- คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
+🤖 คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
   } else if (text === "ความเข้มของแสงตอนนี้เป็นอย่างไร") {
     answer = `ความเข้มของแสงตอนนี้เป็นอย่างไร ?
-- ค่าแสง: ${light} lux
-- คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
+🤖คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
   } else if (text === "ความชื้นตอนนี้เป็นอย่างไร") {
     answer = `ความชื้นตอนนี้เป็นอย่างไร ?
-- ความชื้น: ${humidity} % 
-- คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
-  } else {
-    await replyToUser(replyToken, shortMsg);
-    console.log(`📤 ส่ง AI ตอบกลับถึง ${userId}`);
-    await deletePendingReply(created.id); // ✅ ลบหลังตอบ
-    return;
+🤖คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
   }
 
   await axios.post("https://api.line.me/v2/bot/message/push", {
@@ -225,8 +235,9 @@ async function processMessageEvent(event: any) {
       "Content-Type": "application/json",
     },
   });
+
   console.log(`📤 ส่งข้อความ AI ถึงผู้ใช้ ${userId}`);
-  await deletePendingReply(created.id); // ✅ ลบหลังตอบจริง
+  await deletePendingReply(created.id);
 }
 
 // ===== Sensor Data =====
@@ -295,7 +306,6 @@ app.post("/ask-ai", async (req: Request, res: Response) => {
 
 //   console.log(`✅ รายงานอัตโนมัติส่งเมื่อ ${dateStr} เวลา ${timeStr}`);
 // }, 4 * 60 * 1000);
-
 
 // ===== Root =====
 app.get("/", async (req: Request, res: Response): Promise<void> => {

@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node --transpile-only src/index.ts",
-    "tunnel": "cloudflared tunnel --url http://localhost:3000",
+    "tunnel": "cloudflared tunnel --url http://localhost:3000 --no-autoupdate",
     "back": "npx localtunnel --port 3000 --subdomain biwbong",
     "migrate": "npx prisma migrate dev",
     "test": "echo \"Error: no test specified\" && exit 1"

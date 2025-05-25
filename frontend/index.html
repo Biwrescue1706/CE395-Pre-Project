@@ -1,56 +1,59 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ระบบพยากรณ์อากาศอัจฉริยะ</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ระบบพยากรณ์อากาศอัจฉริยะ</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <div class="container">
-    <!-- เวลากลางบน -->
-    <div class="datetime-card">
-      <h2>⏰ แสดงเวลาปัจจุบัน</h2>
-      <h1>🕒 <span id="timestamp">--</span></h1>
-      <p>📅 <span id="datestamp">--</span></p>
+    <div class="container">
+        <!-- เวลากลางบน -->
+        <div class="datetime-card">
+            <h1>⏰ แสดงเวลาปัจจุบัน</h1>
+            <h1>🕒 <span id="timestamp">--</span></h1>
+            <h2>📅 <span id="datestamp">--</span></h2>
+        </div>
+
+        <!-- ค่าจากเซนเซอร์ -->
+        <div class="grid-info">
+            <div class="card">
+                <h2>🌡 อุณหภูมิ</h2>
+                <p><span id="temp">--</span> °C</p>
+                <p id="temp-status">--</p>
+            </div>
+            <div class="card">
+                <h2>💧 ความชื้น</h2>
+                <p><span id="humidity">--</span> %</p>
+                <p id="humidity-status">--</p>
+            </div>
+            <div class="card">
+                <h2>💡 แสง</h3>
+                    <p><span id="light">--</span> lux</p>
+                    <p id="light-status">--</p>
+            </div>
+            <div class="card">
+                <h3>🤖 คำแนะนำจาก AI</h3>
+                <p id="ai-summary">--</p>
+            </div>
+        </div>
+
+        <!-- ช่องแชทแนวตั้ง -->
+        <div class="chat-box">
+            <h2>💬 ถาม AI เกี่ยวกับสภาพอากาศ</h2>
+            <div class="chat-messages" id="chat-messages">
+                <!-- จะถูกเติมข้อความแบบ .message ผ่าน JS -->
+            </div>
+            <div class="chat-input">
+                <input type="text" id="user-question" placeholder="พิมพ์ เช่น ตอนนี้ควรตากผ้าไหม?" />
+                <button onclick="askAI()">ส่ง</button>
+            </div>
+        </div>
     </div>
 
-    <!-- ค่าจากเซนเซอร์ -->
-    <div class="grid-info">
-      <div class="card">
-        <h3>🌡 อุณหภูมิ</h3>
-        <p><span id="temp">--</span> °C</p>
-        <p id="temp-status">--</p>
-      </div>
-      <div class="card">
-        <h3>💧 ความชื้น</h3>
-        <p><span id="humidity">--</span> %</p>
-        <p id="humidity-status">--</p>
-      </div>
-      <div class="card">
-        <h3>💡 แสง</h3>
-        <p><span id="light">--</span> lux</p>
-        <p id="light-status">--</p>
-      </div>
-      <div class="card">
-        <h3>🤖 คำแนะนำจาก AI</h3>
-        <p id="ai-summary">--</p>
-      </div>
-    </div>
-
-    <!-- ช่องแชทแนวตั้ง -->
-    <div class="chat-box">
-      <h2>💬 ถาม AI เกี่ยวกับสภาพอากาศ</h2>
-      <div class="chat-messages" id="chat-messages">
-        <!-- จะถูกเติมข้อความแบบ .message ผ่าน JS -->
-      </div>
-      <div class="chat-input">
-        <input type="text" id="user-question" placeholder="พิมพ์ เช่น ตอนนี้ควรตากผ้าไหม?" />
-        <button onclick="askAI()">ส่ง</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
+
 </html>

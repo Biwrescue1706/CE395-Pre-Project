@@ -18,7 +18,7 @@ char ssid[] = "BiwBong";
 char pass[] = "17061706";
 
 // ==== Backend URL ====
-const char* serverUrl = "https://elvis-clone-draw-specialties.trycloudflare.com/sensor-data";
+const char* serverUrl = "https://aaad-2001-44c8-6571-7aef-f0b6-687f-4282-1991.ngrok-free.app/sensor-data";
 
 void setup() {
   Serial.begin(115200);
