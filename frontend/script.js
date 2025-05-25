@@ -1,6 +1,8 @@
-const BASE_URL = "https://habitat-laugh-ridge-one.trycloudflare.com";
+const BASE_URL = "https://letter-hispanic-relief-judicial.trycloudflare.com";
 const API_URL = `${BASE_URL}/latest`;      // โหลดข้อมูลเซ็นเซอร์
 const ASK_AI_URL = `${BASE_URL}/ask-ai`;   // ถาม AI
+
+let lastAISummary = 0; // ใช้ตรวจจับทุก 4 นาที
 
 // โหลดข้อมูลเซ็นเซอร์ล่าสุด
 async function fetchSensorData() {
@@ -21,26 +23,61 @@ async function fetchSensorData() {
     const thaiDate = getThaiDateParts(now);
     document.getElementById("datestamp").textContent = `${thaiDate.dayOfWeek}ที่ ${thaiDate.day} ${thaiDate.month} พ.ศ. ${thaiDate.year}`;
     document.getElementById("timestamp").textContent = `${thaiDate.time} น.`;
+
+    // ✅ ถาม AI ทุก 4 นาที (240,000 ms)
+    const nowMs = Date.now();
+    if (nowMs - lastAISummary >= 240000) {
+      fetchAISummary(light, temp, humidity);
+      lastAISummary = nowMs;
+    }
+
   } catch (error) {
     console.error("❌ โหลดข้อมูลเซ็นเซอร์ไม่สำเร็จ:", error);
   }
 }
 
-// ถาม AI ผ่าน backend
+// ถาม AI สำหรับคำแนะนำจากค่าปัจจุบัน
+async function fetchAISummary(light, temp, humidity) {
+  try {
+    const response = await fetch(ASK_AI_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: "วิเคราะห์สภาพอากาศขณะนี้",
+        light,
+        temp,
+        humidity,
+      }),
+    });
+    const data = await response.json();
+    document.getElementById("ai-summary").textContent = data.answer || "ไม่มีคำแนะนำจาก AI";
+  } catch (error) {
+    console.error("❌ โหลดคำแนะนำจาก AI ไม่สำเร็จ:", error);
+    document.getElementById("ai-summary").textContent = "❌ ไม่สามารถโหลดคำแนะนำได้";
+  }
+}
+
+// ถาม AI และแสดงในกล่องแชต
 async function askAI() {
   const input = document.getElementById("user-question");
   const question = input.value.trim();
-  const answerBox = document.getElementById("ai-answer");
+  const chatBox = document.getElementById("chat-messages");
+
   if (!question) {
-    answerBox.textContent = "⚠️ กรุณาพิมพ์คำถามก่อนนะครับ";
+    addMessage("⚠️ กรุณาพิมพ์คำถามก่อนนะครับ", "AI");
     return;
   }
 
-  try {
-    answerBox.innerHTML = `
-    <p>คำถาม : ${question} </p>
-    <p>กำลังถาม AI... </p>`;
+  addMessage(question, "คุณ");
+  input.value = "";
 
+  const loadingMsg = document.createElement("div");
+  loadingMsg.className = "message";
+  loadingMsg.innerHTML = `<div class="sender">🤖AI:</div><div class="answer">⏳ กำลังถาม AI...</div>`;
+  chatBox.appendChild(loadingMsg);
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  try {
     const response = await fetch(ASK_AI_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -50,15 +87,33 @@ async function askAI() {
     const data = await response.json();
     const aiAnswer = data.answer ?? "❌ ไม่มีคำตอบจาก AI";
 
-    answerBox.innerHTML = `  
-    <p>คำถาม : ${question}</p>
-    <p>คำตอบ ของ AI : ${aiAnswer}</p>
-    `;
-    input.value = "";
+    chatBox.removeChild(loadingMsg);
+    addMessage(aiAnswer, "AI");
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาด:", error);
-    answerBox.textContent = "❌ ไม่สามารถติดต่อ AI ได้";
+    chatBox.removeChild(loadingMsg);
+    addMessage("❌ ไม่สามารถติดต่อ AI ได้", "AI");
   }
+}
+
+// เพิ่มข้อความในกล่องแชต
+function addMessage(text, sender) {
+  const chatBox = document.getElementById("chat-messages");
+  const div = document.createElement("div");
+  div.className = "message";
+
+  const name = document.createElement("div");
+  name.className = "sender";
+  name.textContent = sender === "คุณ" ? "คุณ: " : "🤖AI:";
+
+  const msg = document.createElement("div");
+  msg.className = sender === "คุณ" ? "question" : "answer";
+  msg.textContent = text;
+
+  div.appendChild(name);
+  div.appendChild(msg);
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 // แปลสถานะจากค่าเซ็นเซอร์
@@ -111,5 +166,12 @@ function getThaiDateParts(date) {
 // เริ่มโหลดเมื่อเปิดหน้า
 window.addEventListener("load", () => {
   fetchSensorData();
-  setInterval(fetchSensorData, 500); // โหลดทุก 0.5 วินาที
+  setInterval(fetchSensorData, 1000); // โหลดเซ็นเซอร์ทุก 1 วินาที
+});
+
+// ส่งคำถามเมื่อกด Enter
+document.getElementById("user-question").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    askAI();
+  }
 });
