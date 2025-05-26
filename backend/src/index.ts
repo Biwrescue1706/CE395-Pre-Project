@@ -64,7 +64,6 @@ async function askOllama(question: string, light: number, temp: number, humidity
   const prompt = `แสง ${light} lux, อุณหภูมิ ${temp}°C, ความชื้น ${humidity}% คำถาม: ${question} ตอบเป็นภาษาไทยให้สุภาพ กระชับ ชัดเจน`;
 
   try {
-    console.log("📤 กำลังถาม AI:", { question }, " \n", { prompt });
     const res = await axios.post("http://localhost:11434/api/generate", {
       model: "gemma:7b",
       prompt,
@@ -73,12 +72,10 @@ async function askOllama(question: string, light: number, temp: number, humidity
     });
 
     const cleaned = cleanAIResponse(res.data?.response || "❌ ไม่สามารถตอบคำถามได้");
-    console.log("🤖 AI ตอบคำถาม จาก :", question,"\n🤖 คำตอบจาก AI:", cleaned);
 
     return cleaned || "❌ ไม่สามารถตอบคำถามได้";
 
   } catch (err: any) {
-    console.error("❌ AI Error:", err?.response?.data || err?.message || err);
     return "❌ เกิดข้อผิดพลาดในการติดต่อ AI";
   }
 }
@@ -97,7 +94,7 @@ async function replyToUser(replyToken: string, message: string) {
       },
     });
   } catch (err: any) {
-    console.error("❌ LINE reply error:", err?.response?.data || err?.message);
+    return "❌ ส่ง Reply ไม่สำเร็จ";
   }
 }
 
@@ -105,7 +102,7 @@ async function deletePendingReply(id: number) {
   try {
     await prisma.pendingReply.delete({ where: { id } });
   } catch (err: any) {
-    console.error("❌ ลบ PendingReply ไม่สำเร็จ:", err?.response?.data || err?.message);
+    return "❌ ลบ PendingReply ไม่สำเร็จ";
   }
 }
 
@@ -116,8 +113,6 @@ app.post("/webhook", async (req: Request, res: Response) => {
   for (const event of events) {
     if (event?.type === "message" && event?.replyToken && event?.source?.userId) {
       processMessageEvent(event).catch(console.error);
-    } else {
-      console.log("❎ ข้าม event:", event?.type);
     }
   }
 });
@@ -128,29 +123,18 @@ async function processMessageEvent(event: any) {
   const messageType = event.message?.type || "unknown";
   const text = messageType === "text" ? event.message.text.trim() : "";
 
-  console.log("✅ รับข้อมูลจาก LINE:", {
-    replyToken,
-    userId,
-    messageType,
-    text
-  });
-
   // ✅ บันทึก User เฉพาะถ้ายังไม่ซ้ำ
   const existingUser = await prisma.user.findUnique({ where: { userId } });
   if (!existingUser) {
     await prisma.user.create({ data: { userId } });
-    console.log(`✅ บันทึก userId ใหม่: ${userId}`);
-  } else {
-    console.log(`✅ userId นี้มีอยู่แล้ว: ${userId}`);
+    return `✅ บันทึก userId ใหม่ : ${userId}`;
   }
 
-  // ✅ ตรวจสอบ replyToken ไม่ซ้ำ
+ // ✅ ตรวจสอบ replyToken ไม่ซ้ำ
   const exists = await prisma.pendingReply.findUnique({ where: { replyToken } });
   if (exists) {
-    console.log(`⏭️ ซ้ำ replyToken: ${replyToken}`);
-    return;
+    return `⏭️ ซ้ำ replyToken: ${replyToken}`;
   }
-  console.log(`✅ ไม่มีซ้ำ replyToken: ${replyToken}`);
 
   // ✅ บันทึก PendingReply
   const created = await prisma.pendingReply.create({
@@ -161,8 +145,6 @@ async function processMessageEvent(event: any) {
       text: text || "(ไม่มีข้อความ)",
     },
   });
-
-  console.log("✅ บันทึก PendingReply:", created);
 
   if (!lastSensorData) {
     await replyToUser(replyToken, "❌ ยังไม่มีข้อมูลจากเซ็นเซอร์");
@@ -183,9 +165,8 @@ async function processMessageEvent(event: any) {
   // ✅ ตอบทันทีถ้าไม่ใช่ข้อความหรือเป็นคำว่า "สวัสดี"
   if (messageType !== "text" || text.includes("สวัสดี")) {
     await replyToUser(replyToken, shortMsg);
-    console.log(`📤 ตอบกลับข้อความสั้นให้ ${userId}`);
     await deletePendingReply(created.id);
-    return;
+    return `📤 ตอบข้อความทั่วไปให้ ${userId}`;
   }
 
   // ✅ คำถามที่อนุญาตให้ AI ตอบ
@@ -200,9 +181,8 @@ async function processMessageEvent(event: any) {
   // ✅ ถ้าไม่ตรงกับ preset → ตอบ shortMsg เท่านั้น
   if (!presetQuestions.includes(text)) {
     await replyToUser(replyToken, shortMsg);
-    console.log(`📤 ข้อความไม่ตรง preset → ตอบ shortMsg`);
     await deletePendingReply(created.id);
-    return;
+    return "📤 ข้อความไม่ตรง preset → ตอบ shortMsg";
   }
 
   // ✅ ตอบด้วย AI
@@ -236,8 +216,9 @@ async function processMessageEvent(event: any) {
     },
   });
 
-  console.log(`📤 ส่งข้อความ AI ถึงผู้ใช้ ${userId}`);
   await deletePendingReply(created.id);
+  return `📤 ตอบข้อความทั่วไปให้ ${userId}`;
+
 }
 
 // ===== Sensor Data =====
@@ -271,41 +252,41 @@ app.post("/ask-ai", async (req: Request, res: Response) => {
 });
 
 // ===== Auto Report =====
-// setInterval(async () => {
-//   if (!lastSensorData) return;
+setInterval(async () => {
+  if (!lastSensorData) return;
 
-//   const { light, temp, humidity } = lastSensorData;
-//   const aiAnswer = cleanAIResponse(await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity));
-//   const now = dayjs().tz("Asia/Bangkok");
-//   const buddhistYear = now.year() + 543;
-//   const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-//   const monthName = thaiMonths[now.month()];
-//   const dateStr = `วันที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear}`;
-//   const timeStr = `${now.format("HH:mm")} น.`;
+  const { light, temp, humidity } = lastSensorData;
+  const aiAnswer = cleanAIResponse(await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity));
+  const now = dayjs().tz("Asia/Bangkok");
+  const buddhistYear = now.year() + 543;
+  const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+  const monthName = thaiMonths[now.month()];
+  const dateStr = `วันที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear}`;
+  const timeStr = `${now.format("HH:mm")} น.`;
 
-//   const message = `📡 รายงานอัตโนมัติ :
-// 📅 ${dateStr}
-// 🕒 ${timeStr}
-// 💡 แสง : ${light} lux
-// 🌡️ อุณหภูมิ : ${temp} °C
-// 💧 ความชื้น : ${humidity} %
-// 🤖 คำตอบจาก AI : ${aiAnswer}`;
+  const message = `📡 รายงานอัตโนมัติ :
+📅 ${dateStr}
+🕒 ${timeStr}
+💡 แสง : ${light} lux
+🌡️ อุณหภูมิ : ${temp} °C
+💧 ความชื้น : ${humidity} %
+🤖 คำตอบจาก AI : ${aiAnswer}`;
 
-//   const users = await prisma.user.findMany();
-//   for (const u of users) {
-//     await axios.post("https://api.line.me/v2/bot/message/push", {
-//       to: u.userId,
-//       messages: [{ type: "text", text: message }],
-//     }, {
-//       headers: {
-//         Authorization: `Bearer ${LINE_ACCESS_TOKEN}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-//   }
+  const users = await prisma.user.findMany();
+  for (const u of users) {
+    await axios.post("https://api.line.me/v2/bot/message/push", {
+      to: u.userId,
+      messages: [{ type: "text", text: message }],
+    }, {
+      headers: {
+        Authorization: `Bearer ${LINE_ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    });
+  }
 
-//   console.log(`✅ รายงานอัตโนมัติส่งเมื่อ ${dateStr} เวลา ${timeStr}`);
-// }, 4 * 60 * 1000);
+  return`✅ รายงานอัตโนมัติส่งเมื่อ ${dateStr} เวลา ${timeStr}`;
+}, 4 * 60 * 1000);
 
 // ===== Root =====
 app.get("/", async (req: Request, res: Response): Promise<void> => {
