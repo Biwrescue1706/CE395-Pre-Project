@@ -1,4 +1,4 @@
-const BASE_URL = "https://lottery-rare-nutten-western.trycloudflare.com";
+const BASE_URL = "https://exclusive-wherever-forums-jonathan.trycloudflare.com";
 const API_URL = `${BASE_URL}/latest`;      
 const ASK_AI_URL = `${BASE_URL}/ask-ai`;   
 
