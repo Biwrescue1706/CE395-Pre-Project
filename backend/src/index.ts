@@ -252,41 +252,41 @@ app.post("/ask-ai", async (req: Request, res: Response) => {
 });
 
 // ===== Auto Report =====
-setInterval(async () => {
-  if (!lastSensorData) return;
+// setInterval(async () => {
+//   if (!lastSensorData) return;
 
-  const { light, temp, humidity } = lastSensorData;
-  const aiAnswer = cleanAIResponse(await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity));
-  const now = dayjs().tz("Asia/Bangkok");
-  const buddhistYear = now.year() + 543;
-  const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-  const monthName = thaiMonths[now.month()];
-  const dateStr = `วันที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear}`;
-  const timeStr = `${now.format("HH:mm")} น.`;
+//   const { light, temp, humidity } = lastSensorData;
+//   const aiAnswer = cleanAIResponse(await askOllama("วิเคราะห์สภาพอากาศขณะนี้", light, temp, humidity));
+//   const now = dayjs().tz("Asia/Bangkok");
+//   const buddhistYear = now.year() + 543;
+//   const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+//   const monthName = thaiMonths[now.month()];
+//   const dateStr = `วันที่ ${now.date()} ${monthName} พ.ศ.${buddhistYear}`;
+//   const timeStr = `${now.format("HH:mm")} น.`;
 
-  const message = `📡 รายงานอัตโนมัติ :
-📅 ${dateStr}
-🕒 ${timeStr}
-💡 แสง : ${light} lux
-🌡️ อุณหภูมิ : ${temp} °C
-💧 ความชื้น : ${humidity} %
-🤖 คำตอบจาก AI : ${aiAnswer}`;
+//   const message = `📡 รายงานอัตโนมัติ :
+// 📅 ${dateStr}
+// 🕒 ${timeStr}
+// 💡 แสง : ${light} lux
+// 🌡️ อุณหภูมิ : ${temp} °C
+// 💧 ความชื้น : ${humidity} %
+// 🤖 คำตอบจาก AI : ${aiAnswer}`;
 
-  const users = await prisma.user.findMany();
-  for (const u of users) {
-    await axios.post("https://api.line.me/v2/bot/message/push", {
-      to: u.userId,
-      messages: [{ type: "text", text: message }],
-    }, {
-      headers: {
-        Authorization: `Bearer ${LINE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-    });
-  }
+//   const users = await prisma.user.findMany();
+//   for (const u of users) {
+//     await axios.post("https://api.line.me/v2/bot/message/push", {
+//       to: u.userId,
+//       messages: [{ type: "text", text: message }],
+//     }, {
+//       headers: {
+//         Authorization: `Bearer ${LINE_ACCESS_TOKEN}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+//   }
 
-  return`✅ รายงานอัตโนมัติส่งเมื่อ ${dateStr} เวลา ${timeStr}`;
-}, 4 * 60 * 1000);
+//   return`✅ รายงานอัตโนมัติส่งเมื่อ ${dateStr} เวลา ${timeStr}`;
+// }, 4 * 60 * 1000);
 
 // ===== Root =====
 app.get("/", async (req: Request, res: Response): Promise<void> => {
