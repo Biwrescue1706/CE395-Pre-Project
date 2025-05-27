@@ -1,7 +1,8 @@
+/* พื้นหลังและโครงสร้างหลัก */
 body {
   margin: 0;
-  font-family: sans-serif;
-  background: linear-gradient(to right, #dff6e2, #b6e1fc);
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to right, #dff6e2, #c2e9fb);
 }
 
 .container {
@@ -11,19 +12,28 @@ body {
     "time   chat"
     "info   chat";
   gap: 16px;
-  padding: 16px;
+  padding: 20px;
   height: 100vh;
   box-sizing: border-box;
 }
 
-.datetime-card {
-  grid-area: time;
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* เอฟเฟกต์ glass */
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  padding: 20px;
 }
 
+/* กล่องแสดงเวลา */
+.datetime-card {
+  grid-area: time;
+  text-align: center;
+  color: #333;
+}
+
+/* กล่องค่าจากเซนเซอร์ */
 .grid-info {
   grid-area: info;
   display: grid;
@@ -31,72 +41,112 @@ body {
   gap: 16px;
 }
 
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* หัวเรื่องในกล่อง */
+.card h2, .card h3 {
+  color: #2e3a59;
+  margin-bottom: 8px;
 }
 
 .card p {
   font-size: 1.2rem;
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
+/* กล่องแชท */
 .chat-box {
   grid-area: chat;
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* กล่องแสดงข้อความแชท */
 .chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   flex-grow: 1;
   border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 10px;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #fff;
   overflow-y: auto;
-  background: #f9f9f9;
   max-height: 400px;
 }
 
+/* กล่องข้อความแชท */
 .message {
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  max-width: 70%;
   padding: 10px;
-  margin-bottom: 8px;
-  background: #fff;
+  border-radius: 12px;
+  word-wrap: break-word;
+  display: flex;
+  flex-direction: column;
 }
 
+/* ข้อความจากผู้ใช้ (อยู่ขวาสุด) */
+.message.user {
+  background-color: #d0f0ff;
+  border: 1px solid #90caf9;
+  text-align: right;
+  margin-left: auto;
+}
+
+/* ข้อความจาก AI (อยู่ซ้ายสุด) */
+.message.ai {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  text-align: left;
+  margin-right: auto;
+}
+
+/* ชื่อผู้ส่งข้อความ */
+.sender {
+  font-weight: bold;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}
+
+/* ข้อความข้างใน */
+.question,
+.answer {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+/* อินพุตแชท */
 .chat-input {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .chat-input input {
   flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #aaa;
   font-size: 1rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .chat-input button {
-  background-color: #00acc1;
+  background-color: #00bcd4;
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-size: 1.2rem;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.3rem;
   cursor: pointer;
+  transition: background 0.3s ease;
 }
 
-/* Responsive */
+.chat-input button:hover {
+  background-color: #0097a7;
+}
+
+/* Responsive Layout */
 @media screen and (max-width: 768px) {
   .container {
     grid-template-columns: 1fr;
@@ -111,11 +161,7 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .chat-box {
-    height: auto;
-  }
-
   .chat-messages {
-    max-height: 400px;
+    max-height: 300px;
   }
 }

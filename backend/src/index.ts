@@ -22,12 +22,10 @@ app.use(bodyParser.json());
 
 let lastSensorData: { light: number; temp: number; humidity: number } | null = null;
 
-// ===== Helper =====
 function cleanAIResponse(text: string): string {
   return text.replace(/<think>.*?<\/think>/, "").replace(/<[^>]+>/g, "").trim();
 }
 
-//ค่าแสง
 function getLightStatus(light: number): string {
   if (light > 50000) return "สว่างจัดมาก";
   if (light > 10000) return "สว่างมาก";
@@ -39,7 +37,6 @@ function getLightStatus(light: number): string {
   return "มืดมาก";
 }
 
-//ค่าอุณหภูมิ
 function getTempStatus(temp: number): string {
   if (temp > 35) return "อุณหภูมิร้อนมาก";
   if (temp >= 30) return "อุณหภูมิร้อน";
@@ -48,7 +45,6 @@ function getTempStatus(temp: number): string {
   return "อุณหูมิเย็น";
 }
 
-//ค่าความชื้น
 function getHumidityStatus(humidity: number): string {
   if (humidity > 85) return "ชื้นมาก อากาศอึดอัด";
   if (humidity > 70) return "อากาศชื้น เหนียวตัว";
@@ -59,7 +55,6 @@ function getHumidityStatus(humidity: number): string {
   return "อากาศแห้งมาก";
 }
 
-// ====== AI ======
 async function askOllama(question: string, light: number, temp: number, humidity: number): Promise<string> {
   const prompt = `แสง ${light} lux, อุณหภูมิ ${temp}°C, ความชื้น ${humidity}% คำถาม: ${question} ตอบเป็นภาษาไทยให้สุภาพ กระชับ ชัดเจน`;
 
@@ -68,22 +63,20 @@ async function askOllama(question: string, light: number, temp: number, humidity
       model: "gemma:7b",
       prompt,
       system: "คุณคือผู้ช่วยวิเคราะห์อากาศ ตอบด้วยภาษาไทยเท่านั้น",
-      stream: false
+      stream: false,
     });
 
-    const cleaned = cleanAIResponse(res.data?.response || "❌ ไม่สามารถตอบคำถามได้");
-
-    return cleaned || "❌ ไม่สามารถตอบคำถามได้";
-
-  } catch (err: any) {
+    const cleaned = cleanAIResponse(res.data?.response || "");
+    return cleaned.trim() || "❌ ไม่สามารถตอบคำถามได้";
+  } catch {
     return "❌ เกิดข้อผิดพลาดในการติดต่อ AI";
   }
 }
 
-// ===== LINE Reply =====
 async function replyToUser(replyToken: string, message: string) {
   try {
     const trimmedMessage = message.length > 1000 ? message.slice(0, 1000) + "\n...(ตัดข้อความ)" : message;
+    if (!trimmedMessage.trim()) return;
     await axios.post("https://api.line.me/v2/bot/message/reply", {
       replyToken,
       messages: [{ type: "text", text: trimmedMessage }],
@@ -93,26 +86,21 @@ async function replyToUser(replyToken: string, message: string) {
         "Content-Type": "application/json",
       },
     });
-  } catch (err: any) {
-    return "❌ ส่ง Reply ไม่สำเร็จ";
-  }
+  } catch {}
 }
 
 async function deletePendingReply(id: number) {
   try {
     await prisma.pendingReply.delete({ where: { id } });
-  } catch (err: any) {
-    return "❌ ลบ PendingReply ไม่สำเร็จ";
-  }
+  } catch {}
 }
 
-// ===== Webhook =====
 app.post("/webhook", async (req: Request, res: Response) => {
-  res.sendStatus(200); // ตอบ LINE ทันที
+  res.sendStatus(200);
   const events = req.body.events || [];
   for (const event of events) {
     if (event?.type === "message" && event?.replyToken && event?.source?.userId) {
-      processMessageEvent(event).catch(console.error);
+      processMessageEvent(event).catch(() => {});
     }
   }
 });
@@ -123,20 +111,15 @@ async function processMessageEvent(event: any) {
   const messageType = event.message?.type || "unknown";
   const text = messageType === "text" ? event.message.text.trim() : "";
 
-  // ✅ บันทึก User เฉพาะถ้ายังไม่ซ้ำ
   const existingUser = await prisma.user.findUnique({ where: { userId } });
   if (!existingUser) {
     await prisma.user.create({ data: { userId } });
-    return `✅ บันทึก userId ใหม่ : ${userId}`;
+    return;
   }
 
- // ✅ ตรวจสอบ replyToken ไม่ซ้ำ
   const exists = await prisma.pendingReply.findUnique({ where: { replyToken } });
-  if (exists) {
-    return `⏭️ ซ้ำ replyToken: ${replyToken}`;
-  }
+  if (exists) return;
 
-  // ✅ บันทึก PendingReply
   const created = await prisma.pendingReply.create({
     data: {
       replyToken,
@@ -153,57 +136,39 @@ async function processMessageEvent(event: any) {
   }
 
   const { light, temp, humidity } = lastSensorData;
-  const lightStatus = getLightStatus(light);
-  const tempStatus = getTempStatus(temp);
-  const humidityStatus = getHumidityStatus(humidity);
-
   const shortMsg = `📊 สภาพอากาศล่าสุด :
-- ค่าแสง: ${light} lux (${lightStatus})
-- อุณหภูมิ: ${temp} °C (${tempStatus})
-- ความชื้น: ${humidity} % (${humidityStatus})`;
+- ค่าแสง: ${light} lux (${getLightStatus(light)})
+- อุณหภูมิ: ${temp} °C (${getTempStatus(temp)})
+- ความชื้น: ${humidity} % (${getHumidityStatus(humidity)})`;
 
-  // ✅ ตอบทันทีถ้าไม่ใช่ข้อความหรือเป็นคำว่า "สวัสดี"
   if (messageType !== "text" || text.includes("สวัสดี")) {
     await replyToUser(replyToken, shortMsg);
     await deletePendingReply(created.id);
-    return `📤 ตอบข้อความทั่วไปให้ ${userId}`;
+    return;
   }
 
-  // ✅ คำถามที่อนุญาตให้ AI ตอบ
   const presetQuestions = [
     "สภาพอากาศตอนนี้เป็นอย่างไร",
     "ตอนนี้ควรตากผ้าไหม",
     "ตอนนี้ควรพกร่มออกจากบ้านไหม",
     "ความเข้มของแสงตอนนี้เป็นอย่างไร",
-    "ความชื้นตอนนี้เป็นอย่างไร"
+    "ความชื้นตอนนี้เป็นอย่างไร",
   ];
 
-  // ✅ ถ้าไม่ตรงกับ preset → ตอบ shortMsg เท่านั้น
   if (!presetQuestions.includes(text)) {
     await replyToUser(replyToken, shortMsg);
     await deletePendingReply(created.id);
-    return "📤 ข้อความไม่ตรง preset → ตอบ shortMsg";
+    return;
   }
 
-  // ✅ ตอบด้วย AI
   await replyToUser(replyToken, "⏳ กำลังถาม AI...");
-  let answer = "";
+  const aiResponse = await askOllama(text, light, temp, humidity);
+  const answer = `${text}?\n🤖 คำตอบ จาก AI : ${aiResponse}`;
 
-  if (text === "สภาพอากาศตอนนี้เป็นอย่างไร") {
-    answer = `สภาพอากาศตอนนี้เป็นอย่างไร ?
-🤖 คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
-  } else if (text === "ตอนนี้ควรตากผ้าไหม") {
-    answer = `ตอนนี้ควรตากผ้าไหม?
-🤖 คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
-  } else if (text === "ควรพกร่มออกจากบ้านไหม") {
-    answer = `ควรพกร่มออกจากบ้านไหม?
-🤖 คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
-  } else if (text === "ความเข้มของแสงตอนนี้เป็นอย่างไร") {
-    answer = `ความเข้มของแสงตอนนี้เป็นอย่างไร ?
-🤖คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
-  } else if (text === "ความชื้นตอนนี้เป็นอย่างไร") {
-    answer = `ความชื้นตอนนี้เป็นอย่างไร ?
-🤖คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
+  if (!answer.trim()) {
+    await replyToUser(replyToken, "❌ ไม่สามารถตอบคำถามได้ (AI ว่าง)");
+    await deletePendingReply(created.id);
+    return;
   }
 
   await axios.post("https://api.line.me/v2/bot/message/push", {
@@ -217,11 +182,8 @@ async function processMessageEvent(event: any) {
   });
 
   await deletePendingReply(created.id);
-  return `📤 ตอบข้อความทั่วไปให้ ${userId}`;
-
 }
 
-// ===== Sensor Data =====
 app.post("/sensor-data", (req: Request, res: Response) => {
   const { light, temp, humidity } = req.body;
   if (light !== undefined && temp !== undefined && humidity !== undefined) {
@@ -237,7 +199,6 @@ app.get("/latest", (req: Request, res: Response) => {
   else res.status(404).json({ message: "❌ ไม่มีข้อมูลเซ็นเซอร์" });
 });
 
-// ===== AI from Web =====
 app.post("/ask-ai", async (req: Request, res: Response) => {
   const { question } = req.body;
   if (!question || !lastSensorData) {
@@ -249,6 +210,18 @@ app.post("/ask-ai", async (req: Request, res: Response) => {
   const raw = await askOllama(question, light, temp, humidity);
   const cleaned = cleanAIResponse(raw);
   res.json({ answer: cleaned });
+});
+
+app.get("/", async (req: Request, res: Response): Promise<void> => {
+  if (!lastSensorData) {
+    res.send("✅ Backend is running<br>⚠️ ยังไม่มีข้อมูลเซ็นเซอร์");
+    return;
+  }
+  const { light, temp, humidity } = lastSensorData;
+  res.send(`✅ Backend is running <br>
+💡 ค่าแสง: ${light} lux (${getLightStatus(light)})<br>
+🌡️ อุณหภูมิ: ${temp} °C (${getTempStatus(temp)})<br>
+💧 ความชื้น: ${humidity} % (${getHumidityStatus(humidity)})`);
 });
 
 // ===== Auto Report =====
@@ -288,20 +261,6 @@ app.post("/ask-ai", async (req: Request, res: Response) => {
 //   return`✅ รายงานอัตโนมัติส่งเมื่อ ${dateStr} เวลา ${timeStr}`;
 // }, 4 * 60 * 1000);
 
-// ===== Root =====
-app.get("/", async (req: Request, res: Response): Promise<void> => {
-  if (!lastSensorData) {
-    res.send("✅ Backend is running<br>⚠️ ยังไม่มีข้อมูลเซ็นเซอร์");
-    return
-  }
-  const { light, temp, humidity } = lastSensorData;
-  res.send(`✅ Backend is running <br>
-💡 ค่าแสง: ${light} lux (${getLightStatus(light)})<br>
-🌡️ อุณหภูมิ: ${temp} °C (${getTempStatus(temp)})<br>
-💧 ความชื้น: ${humidity} % (${getHumidityStatus(humidity)})`);
-});
-
-// ===== Start Server =====
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
