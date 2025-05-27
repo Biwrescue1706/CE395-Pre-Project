@@ -77,7 +77,7 @@ async function askOllama(question: string, light: number, temp: number, humidity
     });
 
     const cleaned = cleanAIResponse(res.data?.response || "❌ ไม่สามารถตอบคำถามได้");
-    console.log("🤖 AI ตอบคำถาม จาก :", question,"\n🤖 คำตอบจาก AI:", cleaned);
+    console.log("🤖 AI ตอบคำถาม จาก :", question, "\n🤖 คำตอบจาก AI:", cleaned);
 
     return cleaned || "❌ ไม่สามารถตอบคำถามได้";
 
@@ -139,7 +139,6 @@ async function processMessageEvent(event: any) {
     text
   });
 
-  // ✅ บันทึก User เฉพาะถ้ายังไม่ซ้ำ
   const existingUser = await prisma.user.findUnique({ where: { userId } });
   if (!existingUser) {
     await prisma.user.create({ data: { userId } });
@@ -148,7 +147,6 @@ async function processMessageEvent(event: any) {
     console.log(`✅ userId นี้มีอยู่แล้ว: ${userId}`);
   }
 
-  // ✅ ตรวจสอบ replyToken ไม่ซ้ำ
   const exists = await prisma.pendingReply.findUnique({ where: { replyToken } });
   if (exists) {
     console.log(`⏭️ ซ้ำ replyToken: ${replyToken}`);
@@ -156,7 +154,6 @@ async function processMessageEvent(event: any) {
   }
   console.log(`✅ ไม่มีซ้ำ replyToken: ${replyToken}`);
 
-  // ✅ บันทึก PendingReply
   const created = await prisma.pendingReply.create({
     data: {
       replyToken,
@@ -184,40 +181,47 @@ async function processMessageEvent(event: any) {
 - อุณหภูมิ: ${temp} °C (${tempStatus})
 - ความชื้น: ${humidity} % (${humidityStatus})`;
 
-  if (messageType !== "text" ||text.includes("สวัสดี")) {
+  if (messageType !== "text" || text.includes("สวัสดี")) {
     await replyToUser(replyToken, shortMsg);
-    console.log(`📤 ส่ง AI ตอบกลับถึง ${userId}`);
-    await deletePendingReply(created.id); // ✅ ลบหลังตอบ
+    console.log(`📤 ส่ง shortMsg ทันที`);
+    await deletePendingReply(created.id);
+    return;
+  }
+
+  const presetQuestions = [
+    "สภาพอากาศตอนนี้เป็นอย่างไร",
+    "ตอนนี้ควรตากผ้าไหม",
+    "ตอนนี้ควรพกร่มออกจากบ้านไหม",
+    "ความเข้มของแสงตอนนี้เป็นอย่างไร",
+    "ความชื้นตอนนี้เป็นอย่างไร",
+  ];
+
+  const normalizedText = text.replace(/\s+/g, " ").trim();
+  if (!presetQuestions.includes(normalizedText)) {
+    await replyToUser(replyToken, shortMsg);
+    console.log(`📤 คำถามไม่ตรง preset ตอบกลับ shortMsg ทันที`);
+    await deletePendingReply(created.id);
     return;
   }
 
   await replyToUser(replyToken, "⏳ กำลังถาม AI...");
 
   let answer = "";
-  if (text === "สภาพอากาศตอนนี้เป็นอย่างไร") {
+  if (normalizedText === "สภาพอากาศตอนนี้เป็นอย่างไร") {
     answer = `สภาพอากาศตอนนี้เป็นอย่างไร ?
-- ${shortMsg}
-- คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
-  } else if (text === "ตอนนี้ควรตากผ้าไหม") {
+- คำตอบ จาก AI : ${await askOllama(normalizedText, light, temp, humidity)}`;
+  } else if (normalizedText === "ตอนนี้ควรตากผ้าไหม") {
     answer = `ตอนนี้ควรตากผ้าไหม?
-- ค่าแสง: ${light} lux
-- คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
-  } else if (text === "ควรพกร่มออกจากบ้านไหม") {
+- คำตอบ จาก AI : ${await askOllama(normalizedText, light, temp, humidity)}`;
+  } else if (normalizedText === "ควรพกร่มออกจากบ้านไหม") {
     answer = `ควรพกร่มออกจากบ้านไหม?
-- คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
-  } else if (text === "ความเข้มของแสงตอนนี้เป็นอย่างไร") {
+- คำตอบ จาก AI : ${await askOllama(normalizedText, light, temp, humidity)}`;
+  } else if (normalizedText === "ความเข้มของแสงตอนนี้เป็นอย่างไร") {
     answer = `ความเข้มของแสงตอนนี้เป็นอย่างไร ?
-- ค่าแสง: ${light} lux
-- คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
-  } else if (text === "ความชื้นตอนนี้เป็นอย่างไร") {
+- คำตอบ จาก AI : ${await askOllama(normalizedText, light, temp, humidity)}`;
+  } else if (normalizedText === "ความชื้นตอนนี้เป็นอย่างไร") {
     answer = `ความชื้นตอนนี้เป็นอย่างไร ?
-- ความชื้น: ${humidity} % 
-- คำตอบ จาก AI : ${await askOllama(text, light, temp, humidity)}`;
-  } else {
-    await replyToUser(replyToken, shortMsg);
-    console.log(`📤 ส่ง AI ตอบกลับถึง ${userId}`);
-    await deletePendingReply(created.id); // ✅ ลบหลังตอบ
-    return;
+- คำตอบ จาก AI : ${await askOllama(normalizedText, light, temp, humidity)}`;
   }
 
   await axios.post("https://api.line.me/v2/bot/message/push", {
@@ -229,8 +233,9 @@ async function processMessageEvent(event: any) {
       "Content-Type": "application/json",
     },
   });
+
   console.log(`📤 ส่งข้อความ AI ถึงผู้ใช้ ${userId}`);
-  await deletePendingReply(created.id); // ✅ ลบหลังตอบจริง
+  await deletePendingReply(created.id);
 }
 
 // ===== Sensor Data =====
